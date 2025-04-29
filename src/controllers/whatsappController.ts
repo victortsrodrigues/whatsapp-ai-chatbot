@@ -1,8 +1,9 @@
-import { Request, Response } from 'express';
-import { WhatsAppWebhookPayload } from '../interfaces';
-import whatsappService from '../services/whatsappService';
-import aiService from '../services/aiService';
-import logger from '../utils/logger';
+import { Request, Response } from "express";
+import { WhatsAppWebhookPayload } from "../interfaces";
+import whatsappService from "../services/whatsappService";
+import aiService from "../services/aiService";
+import logger from "../utils/logger";
+import autoReplyService from "services/autoReplyService";
 
 class WhatsAppController {
   /**
@@ -11,48 +12,48 @@ class WhatsAppController {
   public async handleWebhook(req: Request, res: Response): Promise<void> {
     try {
       const payload = req.body as WhatsAppWebhookPayload;
-      
+
       // Process the webhook asynchronously
       setImmediate(() => {
         whatsappService.processWebhook(payload);
       });
-      
+
       // Respond quickly to webhook
-      res.status(200).send('OK');
+      res.status(200).send("OK");
     } catch (error) {
-      logger.error('Error in webhook handler:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      logger.error("Error in webhook handler:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   }
-  
+
   /**
    * Verify the webhook subscription
    */
   public verifyWebhook(req: Request, res: Response): void {
     try {
-      const mode = req.query['hub.mode'] as string;
-      const token = req.query['hub.verify_token'] as string;
-      const challenge = req.query['hub.challenge'] as string;
-      
+      const mode = req.query["hub.mode"] as string;
+      const token = req.query["hub.verify_token"] as string;
+      const challenge = req.query["hub.challenge"] as string;
+
       if (!mode || !token) {
-        logger.warn('Missing verification parameters');
-        res.status(400).send('Missing parameters');
+        logger.warn("Missing verification parameters");
+        res.status(400).send("Missing parameters");
         return;
       }
-      
+
       const response = whatsappService.verifyWebhook(mode, token, challenge);
-      
+
       if (response) {
         res.status(200).send(response);
       } else {
-        res.status(403).send('Verification failed');
+        res.status(403).send("Verification failed");
       }
     } catch (error) {
-      logger.error('Error in verify webhook:', error);
-      res.status(500).send('Internal server error');
+      logger.error("Error in verify webhook:", error);
+      res.status(500).send("Internal server error");
     }
   }
-  
+
   /**
    * Health check endpoint for the API
    */
@@ -60,24 +61,44 @@ class WhatsAppController {
     try {
       // Check the AI service health
       const aiHealthy = await aiService.checkHealth();
-      
+
       res.status(200).json({
-        status: 'ok',
+        status: "ok",
         timestamp: new Date().toISOString(),
         services: {
-          api: 'healthy',
-          ai: aiHealthy ? 'healthy' : 'unhealthy'
-        }
+          api: "healthy",
+          ai: aiHealthy ? "healthy" : "unhealthy",
+        },
       });
     } catch (error) {
-      logger.error('Health check failed:', error);
-      
+      logger.error("Health check failed:", error);
+
       res.status(500).json({
-        status: 'error',
+        status: "error",
         timestamp: new Date().toISOString(),
-        message: 'Health check failed'
+        message: "Health check failed",
       });
     }
+  }
+
+  /** Desativa o auto-responder para um user específico */
+  public disableAutoReply(req: Request, res: Response): void {
+    const { userId } = req.params;
+    autoReplyService.disable(userId);
+    res.status(200).json({
+      status: "ok",
+      message: `Auto-reply desativado para ${userId}`,
+    });
+  }
+
+  /** Reativa o auto-responder para um user específico */
+  public enableAutoReply(req: Request, res: Response): void {
+    const { userId } = req.params;
+    autoReplyService.enable(userId);
+    res.status(200).json({
+      status: "ok",
+      message: `Auto-reply ativado para ${userId}`,
+    });
   }
 }
 

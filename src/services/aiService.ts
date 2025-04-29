@@ -45,8 +45,8 @@ class AIService {
     } catch (error) {
       // Handle axios errors
       if (axios.isAxiosError(error)) {
-        const statusCode = error.response?.status || 500;
-        const errorMessage = error.response?.data?.message || error.message;
+        const statusCode = error.response?.status ?? 500;
+        const errorMessage = error.response?.data?.message ?? error.message;
         
         logger.error(`AI service error (${statusCode}): ${errorMessage}`);
         
@@ -69,7 +69,7 @@ class AIService {
   public async checkHealth(): Promise<boolean> {
     try {
       const healthUrl = this.serviceUrl.replace('/rag/query', '/health/ready');
-      const response = await axios.get(healthUrl, { timeout: 5000 });
+      const response = await axios.get(healthUrl, { timeout: 10000 });
       return response.status === 200;
     } catch (error) {
       logger.error('AI service health check failed:', error);

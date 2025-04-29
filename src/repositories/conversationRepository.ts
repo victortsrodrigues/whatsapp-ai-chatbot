@@ -2,7 +2,7 @@ import { ConversationHistory, UserConversation } from '../interfaces';
 import logger from '../utils/logger';
 
 class ConversationRepository {
-  private conversations: Map<string, ConversationHistory[]> = new Map();
+  private readonly conversations: Map<string, ConversationHistory[]> = new Map();
   private readonly MAX_HISTORY_LENGTH = 3;
   
   /**

@@ -78,8 +78,8 @@ class WhatsAppService {
     } catch (error) {
       // Handle axios errors
       if (axios.isAxiosError(error)) {
-        const statusCode = error.response?.status || 500;
-        const errorMessage = error.response?.data?.message || error.message;
+        const statusCode = error.response?.status ?? 500;
+        const errorMessage = error.response?.data?.message ?? error.message;
         
         logger.error(`WhatsApp API error (${statusCode}): ${errorMessage}`);
         
@@ -101,7 +101,7 @@ class WhatsAppService {
    */
   public verifyWebhook(mode: string, token: string, challenge: string): string | null {
     // The token you set up in the WhatsApp developer portal
-    const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || 'student_republic_verify_token';
+    const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN;
     
     if (mode === 'subscribe' && token === verifyToken) {
       logger.info('WhatsApp webhook verified');

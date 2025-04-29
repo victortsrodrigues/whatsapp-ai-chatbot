@@ -49,7 +49,7 @@ export const errorHandler = (
   res.status(statusCode).json({
     error: {
       message,
-      details: details || undefined,
+      details: details ?? undefined,
       status: statusCode
     }
   });
