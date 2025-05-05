@@ -41,8 +41,8 @@ export interface BufferedMessage {
 }
 
 export interface ConversationHistory {
-  query: string;
-  response: string;
+  role: string;
+  content: string;
 }
 
 export interface UserConversation {

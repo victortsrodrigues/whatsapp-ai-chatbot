@@ -25,7 +25,7 @@ class AIService {
         system_message: null
       };
       
-      logger.debug('AI request payload:', requestBody);
+      logger.info('AI request payload:', requestBody);
       
       // Make request to AI microservice
       const response = await axios.post<AIResponse>(
@@ -39,7 +39,7 @@ class AIService {
         }
       );
       
-      logger.debug(`AI service responded with status: ${response.status}`);
+      logger.info(`AI service responded with status: ${response.status}`);
       return response.data;
       
     } catch (error) {

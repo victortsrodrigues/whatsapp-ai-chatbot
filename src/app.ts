@@ -25,6 +25,8 @@ app.use(morgan("dev"));
 // Apply content-type validation middleware
 app.use(validateContentType);
 
+app.get("/", whatsappController.baseMessage);
+
 // Define routes
 app.get("/health", whatsappController.healthCheck);
 

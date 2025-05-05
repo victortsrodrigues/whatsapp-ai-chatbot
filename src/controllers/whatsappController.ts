@@ -6,6 +6,12 @@ import logger from "../utils/logger";
 import autoReplyService from "../services/autoReplyService";
 
 class WhatsAppController {
+  
+  /** Basic message for testing */
+  public baseMessage(req: Request, res: Response): void {
+    res.send("Olá, eu sou o seu assistente virtual!");
+  }
+  
   /**
    * Handle incoming webhooks from WhatsApp
    */
@@ -60,8 +66,7 @@ class WhatsAppController {
   public async healthCheck(req: Request, res: Response): Promise<void> {
     try {
       // Check the AI service health
-      // const aiHealthy = await aiService.checkHealth();                 ########## remover comentário!
-      const aiHealthy = true;
+      const aiHealthy = await aiService.checkHealth();
 
       res.status(200).json({
         status: "ok",

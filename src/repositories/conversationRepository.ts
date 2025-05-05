@@ -3,7 +3,7 @@ import logger from '../utils/logger';
 
 class ConversationRepository {
   private readonly conversations: Map<string, ConversationHistory[]> = new Map();
-  private readonly MAX_HISTORY_LENGTH = 3;
+  private readonly MAX_HISTORY_LENGTH = 6;
   
   /**
    * Get conversation history for a user
@@ -22,7 +22,8 @@ class ConversationRepository {
     // Add new conversation
     const updatedHistory = [
       ...history, 
-      { query, response }
+      { role: 'user', content: query },
+      { role: 'assistant', content: response }
     ];
     
     // Keep only the last MAX_HISTORY_LENGTH conversations
