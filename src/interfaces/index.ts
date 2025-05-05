@@ -1,7 +1,7 @@
 export interface WhatsAppMessage {
   id: string;
   from: string;
-  timestamp: number;
+  timestamp: string;
   type: string;
   text?: {
     body: string;
@@ -36,7 +36,7 @@ export interface WhatsAppWebhookPayload {
 export interface BufferedMessage {
   userId: string;
   messages: string[];
-  lastTimestamp: number;
+  lastTimestamp: string;
   timeoutId?: NodeJS.Timeout;
 }
 

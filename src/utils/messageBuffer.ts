@@ -11,7 +11,7 @@ class MessageBuffer {
   /**
    * Add a message to the buffer for a specific user
    */
-  public addMessage(userId: string, message: string, timestamp: number): void {
+  public addMessage(userId: string, message: string, timestamp: string): void {
     const existingBuffer = this.buffers.get(userId);
 
     // Clear existing timeout if there is one
@@ -95,7 +95,7 @@ class MessageBuffer {
       try {
         await whatsappService.sendMessage(
           userId,
-          "Sorry, I'm having trouble processing your request right now. Please try again later."
+          "Desculpe, houve algum problema."
         );
       } catch (sendError) {
         logger.error(

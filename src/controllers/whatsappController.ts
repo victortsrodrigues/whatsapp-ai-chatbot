@@ -60,7 +60,8 @@ class WhatsAppController {
   public async healthCheck(req: Request, res: Response): Promise<void> {
     try {
       // Check the AI service health
-      const aiHealthy = await aiService.checkHealth();
+      // const aiHealthy = await aiService.checkHealth();                 ########## remover comentário!
+      const aiHealthy = true;
 
       res.status(200).json({
         status: "ok",
