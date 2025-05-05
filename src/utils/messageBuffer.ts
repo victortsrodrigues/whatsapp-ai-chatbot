@@ -4,7 +4,7 @@ import logger from "./logger";
 import aiService from "../services/aiService";
 import whatsappService from "../services/whatsappService";
 import conversationRepository from "../repositories/conversationRepository";
-import autoReplyService from "services/autoReplyService";
+import autoReplyService from "../services/autoReplyService";
 
 class MessageBuffer {
   private readonly buffers: Map<string, BufferedMessage> = new Map();

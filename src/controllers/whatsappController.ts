@@ -3,7 +3,7 @@ import { WhatsAppWebhookPayload } from "../interfaces";
 import whatsappService from "../services/whatsappService";
 import aiService from "../services/aiService";
 import logger from "../utils/logger";
-import autoReplyService from "services/autoReplyService";
+import autoReplyService from "../services/autoReplyService";
 
 class WhatsAppController {
   /**
