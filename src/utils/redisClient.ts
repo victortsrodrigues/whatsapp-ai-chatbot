@@ -9,7 +9,12 @@ class RedisClient {
 
   constructor() {
     this.client = createClient({
-      url: environment.redis.url
+      username: 'default',
+      password: environment.redis.password,
+      socket: {
+          host: 'redis-16971.c8.us-east-1-3.ec2.redns.redis-cloud.com',
+          port: 16971
+      }
     });
 
     this.client.on('error', (err) => {
@@ -19,6 +24,11 @@ class RedisClient {
 
     this.client.on('connect', () => {
       logger.info('Connected to Redis');
+      this.isConnected = true;
+    });
+
+    this.client.on('ready', () => {
+      logger.info('Redis ready to use');
       this.isConnected = true;
     });
 
