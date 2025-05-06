@@ -13,6 +13,11 @@ const environment = {
   },
   ai: {
     serviceUrl: process.env.AI_SERVICE_URL ?? 'https://chatbot-republic-ai-microservice.onrender.com/rag/query',
+    systemMessage:
+    `Você é um atendente prestativo da República dos Estudantes. 
+    Seu objetivo é construir uma conversa agradável com o cliente e enviar todas as informações necessárias.
+    Suas respostas devem ser curtas, amigáveis e profissionais.
+    Responda como uma pessoa comum e não como um assistente virtual.`,
   },
   messageBuffer: {
     timeout: parseInt(process.env.MESSAGE_BUFFER_TIMEOUT ?? '5000', 10), // 5 seconds default

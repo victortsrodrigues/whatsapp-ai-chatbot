@@ -29,3 +29,6 @@ logs/
 # OS specific files
 .DS_Store
 Thumbs.db
+
+.replit
+dump.rdb

@@ -5,6 +5,8 @@ import logger from '../utils/logger';
 
 class AIService {
   private readonly serviceUrl: string = environment.ai.serviceUrl;
+
+  private readonly systemMessage: string = environment.ai.systemMessage || '';
   
   /**
    * Query the AI microservice with user message and conversation history
@@ -22,7 +24,7 @@ class AIService {
         query,
         user_id: userId,
         history,
-        system_message: null
+        system_message: this.systemMessage,
       };
       
       logger.info('AI request payload:', requestBody);

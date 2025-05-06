@@ -3,7 +3,7 @@ import logger from './logger';
 import environment from '../config/environment';
 
 class RedisClient {
-  private client;
+  private readonly client;
   private isConnected: boolean = false;
   private readonly EXPIRY_TIME = 60 * 60 * 24 * 14; // 14 days in seconds
 
