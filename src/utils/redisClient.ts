@@ -46,6 +46,13 @@ class RedisClient {
   }
 
   /**
+   * Get direct access to Redis client for more complex operations
+   */
+  public getClient() {
+    return this.client;
+  }
+
+  /**
    * Get a value from Redis
    */
   public async get(key: string): Promise<string | null> {
@@ -88,6 +95,68 @@ class RedisClient {
       await this.client.del(key);
     } catch (error) {
       logger.error(`Error deleting key ${key} from Redis:`, error);
+    }
+  }
+
+  /**
+   * Add item to the end of a list (RPUSH)
+   */
+  public async rPush(key: string, value: string): Promise<number> {
+    try {
+      if (!this.isConnected) {
+        logger.warn('Redis not connected, trying to reconnect...');
+        await this.connect();
+      }
+      return await this.client.rPush(key, value);
+    } catch (error) {
+      logger.error(`Error adding to list ${key} in Redis:`, error);
+      return 0;
+    }
+  }
+
+  /**
+   * Get a range of elements from a list
+   */
+  public async lRange(key: string, start: number, stop: number): Promise<string[]> {
+    try {
+      if (!this.isConnected) {
+        logger.warn('Redis not connected, trying to reconnect...');
+        await this.connect();
+      }
+      return await this.client.lRange(key, start, stop);
+    } catch (error) {
+      logger.error(`Error getting range from list ${key} in Redis:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Trim a list to the specified range
+   */
+  public async lTrim(key: string, start: number, stop: number): Promise<void> {
+    try {
+      if (!this.isConnected) {
+        logger.warn('Redis not connected, trying to reconnect...');
+        await this.connect();
+      }
+      await this.client.lTrim(key, start, stop);
+    } catch (error) {
+      logger.error(`Error trimming list ${key} in Redis:`, error);
+    }
+  }
+
+  /**
+   * Set expiration time for a key
+   */
+  public async expire(key: string, seconds: number): Promise<void> {
+    try {
+      if (!this.isConnected) {
+        logger.warn('Redis not connected, trying to reconnect...');
+        await this.connect();
+      }
+      await this.client.expire(key, seconds);
+    } catch (error) {
+      logger.error(`Error setting expiry for key ${key} in Redis:`, error);
     }
   }
 
