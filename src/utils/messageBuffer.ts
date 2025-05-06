@@ -67,7 +67,7 @@ class MessageBuffer {
       );
 
       // Get conversation history
-      const history = conversationRepository.getHistory(userId);
+      const history = await conversationRepository.getHistory(userId);
 
       // Send to AI service
       const aiResponse = await aiService.queryAI(
@@ -77,7 +77,7 @@ class MessageBuffer {
       );
 
       // Store the new conversation entry
-      conversationRepository.addConversation(
+      await conversationRepository.addConversation(
         userId,
         combinedMessage,
         aiResponse.response

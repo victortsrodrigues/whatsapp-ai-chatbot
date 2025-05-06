@@ -1,63 +1,76 @@
-import { ConversationHistory, UserConversation } from '../interfaces';
+import { ConversationHistory } from '../interfaces';
 import logger from '../utils/logger';
+import redisClient from '../utils/redisClient';
 
 class ConversationRepository {
-  private readonly conversations: Map<string, ConversationHistory[]> = new Map();
-  private readonly MAX_HISTORY_LENGTH = 6;
+  private readonly MAX_HISTORY_LENGTH = 6; // Mantém 3 interações (pergunta + resposta para cada)
+  private readonly HISTORY_PREFIX = 'history:';
   
   /**
    * Get conversation history for a user
    */
-  public getHistory(userId: string): ConversationHistory[] {
-    const history = this.conversations.get(userId) || [];
-    return [...history];
+  public async getHistory(userId: string): Promise<ConversationHistory[]> {
+    try {
+      const key = this.getRedisKey(userId);
+      const historyJson = await redisClient.get(key);
+      
+      if (!historyJson) {
+        return [];
+      }
+      
+      return JSON.parse(historyJson);
+    } catch (error) {
+      logger.error(`Error getting history for user ${userId}:`, error);
+      return [];
+    }
   }
   
   /**
    * Add a new conversation entry for a user
    */
-  public addConversation(userId: string, query: string, response: string): void {
-    const history = this.conversations.get(userId) || [];
-    
-    // Add new conversation
-    const updatedHistory = [
-      ...history, 
-      { role: 'user', content: query },
-      { role: 'assistant', content: response }
-    ];
-    
-    // Keep only the last MAX_HISTORY_LENGTH conversations
-    if (updatedHistory.length > this.MAX_HISTORY_LENGTH) {
-      updatedHistory.shift(); // Remove oldest conversation
+  public async addConversation(userId: string, query: string, response: string): Promise<void> {
+    try {
+      const key = this.getRedisKey(userId);
+      const currentHistory = await this.getHistory(userId);
+      
+      // Add new conversation
+      const updatedHistory = [
+        ...currentHistory, 
+        { role: 'user', content: query },
+        { role: 'assistant', content: response }
+      ];
+      
+      // Keep only the last MAX_HISTORY_LENGTH conversations
+      const trimmedHistory = updatedHistory.length > this.MAX_HISTORY_LENGTH
+        ? updatedHistory.slice(updatedHistory.length - this.MAX_HISTORY_LENGTH)
+        : updatedHistory;
+      
+      // Save updated history
+      await redisClient.set(key, JSON.stringify(trimmedHistory));
+      logger.debug(`Added conversation for user ${userId}. History length: ${trimmedHistory.length}`);
+    } catch (error) {
+      logger.error(`Error adding conversation for user ${userId}:`, error);
     }
-    
-    // Save updated history
-    this.conversations.set(userId, updatedHistory);
-    logger.debug(`Added conversation for user ${userId}. History length: ${updatedHistory.length}`);
   }
   
   /**
    * Clear conversation history for a user
    */
-  public clearHistory(userId: string): void {
-    this.conversations.delete(userId);
-    logger.debug(`Cleared conversation history for user ${userId}`);
+  public async clearHistory(userId: string): Promise<void> {
+    try {
+      const key = this.getRedisKey(userId);
+      await redisClient.del(key);
+      logger.debug(`Cleared conversation history for user ${userId}`);
+    } catch (error) {
+      logger.error(`Error clearing history for user ${userId}:`, error);
+    }
   }
   
   /**
-   * Get all user conversations
+   * Get Redis key for user history
    */
-  public getAllConversations(): UserConversation[] {
-    const result: UserConversation[] = [];
-    
-    for (const [userId, history] of this.conversations.entries()) {
-      result.push({
-        userId,
-        history: [...history]
-      });
-    }
-    
-    return result;
+  private getRedisKey(userId: string): string {
+    return `${this.HISTORY_PREFIX}${userId}`;
   }
 }
 
