@@ -6,6 +6,7 @@ class RedisClient {
   private readonly client;
   private isConnected: boolean = false;
   private readonly EXPIRY_TIME = 60 * 60 * 24 * 14; // 14 days in seconds
+  private reconnectAttempts: number = 0;
 
   constructor() {
     this.client = createClient({
@@ -47,24 +48,55 @@ class RedisClient {
 
   private async connect(): Promise<void> {
     try {
+      if (this.client.isOpen) {
+        return;
+      }
       await this.client.connect();
+      // Reset reconnect attempts after successful connection
+      this.reconnectAttempts = 0;
     } catch (error) {
       logger.error('Failed to connect to Redis:', error);
-      // Try to reconnect after a delay
+      // Exponential backoff for reconnection attempts
+      const backoff = Math.min(5000 * Math.pow(2, this.reconnectAttempts), 30000);
+      this.reconnectAttempts++;
+
+      logger.info(`Trying to reconnect in ${backoff/1000} seconds (attempt ${this.reconnectAttempts})...`);
       setTimeout(() => this.connect(), 5000);
     }
   }
 
-  /**
-   * Get direct access to Redis client for more complex operations
-   */
+  // Ping Redis to check if it's really available
+  public async ping(): Promise<boolean> {
+    try {
+      if (!this.isConnected) {
+        return false;
+      }
+
+      // Set a timeout of 2 seconds for the ping command
+      const pingPromise = this.client.ping();
+      const timeoutPromise = new Promise<string>((_, reject) => {
+        setTimeout(() => reject(new Error('Redis ping timeout')), 2000);
+      });
+
+      const result = await Promise.race([pingPromise, timeoutPromise]);
+      return result === 'PONG';
+    } catch (error) {
+      logger.error('Error pinging Redis:', error);
+      return false;
+    }
+  }
+
+  // Check if Redis is available and responding (for health checks)
+  public async isHealthy(): Promise<boolean> {
+    return this.isConnected && await this.ping();
+  }
+  
+  // Get direct access to Redis client for more complex operations
   public getClient() {
     return this.client;
   }
 
-  /**
-   * Get a value from Redis
-   */
+  // Get a value from Redis
   public async get(key: string): Promise<string | null> {
     try {
       if (!this.isConnected) {
@@ -78,9 +110,7 @@ class RedisClient {
     }
   }
 
-  /**
-   * Set a value in Redis with expiry
-   */
+  // Set a value in Redis with expiry
   public async set(key: string, value: string, expiry: number = this.EXPIRY_TIME): Promise<void> {
     try {
       if (!this.isConnected) {
@@ -93,9 +123,7 @@ class RedisClient {
     }
   }
 
-  /**
-   * Delete a key from Redis
-   */
+  // Delete a key from Redis
   public async del(key: string): Promise<void> {
     try {
       if (!this.isConnected) {
@@ -108,9 +136,7 @@ class RedisClient {
     }
   }
 
-  /**
-   * Add item to the end of a list (RPUSH)
-   */
+  // Add item to the end of a list (RPUSH)
   public async rPush(key: string, value: string): Promise<number> {
     try {
       if (!this.isConnected) {
@@ -124,9 +150,7 @@ class RedisClient {
     }
   }
 
-  /**
-   * Get a range of elements from a list
-   */
+  // Get a range of elements from a list
   public async lRange(key: string, start: number, stop: number): Promise<string[]> {
     try {
       if (!this.isConnected) {
@@ -140,9 +164,7 @@ class RedisClient {
     }
   }
 
-  /**
-   * Trim a list to the specified range
-   */
+  // Trim a list to the specified range
   public async lTrim(key: string, start: number, stop: number): Promise<void> {
     try {
       if (!this.isConnected) {
@@ -155,9 +177,7 @@ class RedisClient {
     }
   }
 
-  /**
-   * Set expiration time for a key
-   */
+  // Set expiration time for a key
   public async expire(key: string, seconds: number): Promise<void> {
     try {
       if (!this.isConnected) {
@@ -170,16 +190,7 @@ class RedisClient {
     }
   }
 
-  /**
-   * Check if Redis is connected
-   */
-  public isReady(): boolean {
-    return this.isConnected;
-  }
-
-  /**
-   * Close Redis connection
-   */
+  // Close Redis connection
   public async close(): Promise<void> {
     try {
       await this.client.quit();

@@ -4,14 +4,15 @@ import whatsappService from "../services/whatsappService";
 import aiService from "../services/aiService";
 import logger from "../utils/logger";
 import autoReplyService from "../services/autoReplyService";
+import redisClient from "../utils/redisClient";
 
 class WhatsAppController {
-  
+
   /** Basic message for testing */
   public baseMessage(req: Request, res: Response): void {
     res.send("Olá, eu sou o seu assistente virtual!");
   }
-  
+
   /**
    * Handle incoming webhooks from WhatsApp
    */
@@ -68,12 +69,16 @@ class WhatsAppController {
       // Check the AI service health
       const aiHealthy = await aiService.checkHealth();
 
+      // Check Redis health
+      const redisHealthy = await redisClient.isHealthy();
+
       res.status(200).json({
         status: "ok",
         timestamp: new Date().toISOString(),
         services: {
           api: "healthy",
           ai: aiHealthy ? "healthy" : "unhealthy",
+          redis: redisHealthy ? "healthy" : "unhealthy"
         },
       });
     } catch (error) {

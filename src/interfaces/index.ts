@@ -59,7 +59,7 @@ export interface AIRequest {
 
 export interface AIResponse {
   response: string;
-  sources?: any[];
+  requires_action: boolean;
 }
 
 export interface ApiError extends Error {

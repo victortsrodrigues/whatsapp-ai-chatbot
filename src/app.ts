@@ -11,6 +11,7 @@ import {
 } from "./middleware/requestValidator";
 import whatsappController from "./controllers/whatsappController";
 import logger from "./utils/logger";
+import redisClient from "./utils/redisClient";
 
 // Create Express application
 const app: Express = express();
@@ -47,8 +48,25 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Start the server
-const startServer = (): void => {
+const startServer = async (): Promise<void> => {
   const port = environment.port;
+
+  // Verificar conexão com Redis antes de iniciar o servidor
+  try {
+    logger.info("Verificando conexão com Redis...");
+
+    // Esperar um pouco pela tentativa de conexão
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    if (!(await redisClient.isHealthy())) {
+      logger.warn("Redis não está conectado. O servidor continuará, mas o histórico de conversas pode não funcionar corretamente.");
+    } else {
+      logger.info("Redis conectado com sucesso!");
+    }
+  } catch (error) {
+    logger.error("Erro ao verificar conexão com Redis:", error);
+    logger.warn("Iniciando servidor sem garantia de conexão com Redis");
+  }
 
   server = app.listen(port, () => {
     logger.info(
@@ -97,7 +115,10 @@ const startServer = (): void => {
 
 // Start server if this file is run directly
 if (require.main === module) {
-  startServer();
+  startServer().catch(error => {
+    logger.error("Failed to start server:", error);
+    process.exit(1);
+  });
 }
 
 export { app, startServer };
