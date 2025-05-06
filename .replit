@@ -3,6 +3,7 @@ run = "npm run dev"
 
 [nix]
 channel = "stable-24_05"
+packages = ["pkg"]
 
 [deployment]
 run = ["sh", "-c", "npm run dev"]
@@ -10,3 +11,23 @@ run = ["sh", "-c", "npm run dev"]
 [[ports]]
 localPort = 3000
 externalPort = 80
+
+[[ports]]
+localPort = 6379
+externalPort = 3000
+
+[workflows]
+runButton = "Dev with Redis"
+
+[[workflows.workflow]]
+name = "Dev with Redis"
+author = 42325504
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "redis-server --bind 0.0.0.0 --port 6379 --protected-mode no"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
