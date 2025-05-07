@@ -26,10 +26,17 @@ class WhatsAppService {
           // Process each message
           for (const message of messages) {
             // Only process text messages
-            if (message.type !== 'text' || !message.text) continue;
+            let text: string;
+
+            if (message.text?.body) {
+              text = message.text.body;
+            } else if (message.image?.caption) {
+              text = message.image.caption;
+            } else {
+              continue;
+            }
             
             const userId = message.from;
-            const text = message.text.body;
             const timestamp = message.timestamp;
             
             logger.info(`Received message from ${userId}: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`);
