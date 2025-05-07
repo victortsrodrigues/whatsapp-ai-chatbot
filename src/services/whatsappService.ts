@@ -3,13 +3,14 @@ import { WhatsAppWebhookPayload, ApiError } from '../interfaces';
 import environment from '../config/environment';
 import logger from '../utils/logger';
 import messageBuffer from '../utils/messageBuffer';
+import autoReplyService from './autoReplyService'
 
 class WhatsAppService {
   private readonly apiUrl: string = environment.whatsapp.apiUrl;
   private readonly apiToken: string = environment.whatsapp.apiToken;
   
   // Process incoming webhook payload from WhatsApp
-  public processWebhook(payload: WhatsAppWebhookPayload): void {
+  public async processWebhook(payload: WhatsAppWebhookPayload): Promise<void> {
     try {
       if (payload.object !== 'whatsapp_business_account') {
         logger.warn(`Received non-WhatsApp webhook: ${payload.object}`);
@@ -40,6 +41,12 @@ class WhatsAppService {
             const timestamp = message.timestamp;
             
             logger.info(`Received message from ${userId}: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`);
+
+            // Check if the message is a command to disable/enable auto-reply
+            if (text.trim().toLowerCase() === 'vi esse anúncio e gostaria de mais informações') {
+              logger.info(`Ativando auto-reply para ${userId}`);
+              await autoReplyService.enable([userId]);
+            }
             
             // Add message to buffer for processing
             messageBuffer.addMessage(userId, text, timestamp);
