@@ -52,7 +52,7 @@ class RedisClient {
           this.isConnected = false;
       }
   }
-  
+
   private async connect(): Promise<void> {
     try {
       if (this.client.isOpen) {
@@ -97,14 +97,16 @@ class RedisClient {
   public async isHealthy(): Promise<boolean> {
     return this.isConnected && await this.ping();
   }
-  
+
   // Get direct access to Redis client for more complex operations
   public getClient() {
     return this.client;
   }
 
   // Get a value from Redis
-  public async get(key: string): Promise<string | null> {
+  public async get(key: string, retryCount = 0): Promise<string | null> {
+    const MAX_RETRIES = 3;
+
     try {
       if (!this.isConnected) {
         logger.warn('Redis not connected, trying to reconnect...');
@@ -113,6 +115,16 @@ class RedisClient {
       return await this.client.get(key);
     } catch (error) {
       logger.error(`Error getting key ${key} from Redis:`, error);
+
+      // Implementar retry para operações de leitura
+      if (retryCount < MAX_RETRIES) {
+        const backoff = Math.min(100 * Math.pow(2, retryCount), 2000);
+        logger.info(`Retrying Redis get for key ${key} in ${backoff}ms (attempt ${retryCount + 1})`);
+
+        await new Promise(resolve => setTimeout(resolve, backoff));
+        return this.get(key, retryCount + 1);
+      }
+
       return null;
     }
   }

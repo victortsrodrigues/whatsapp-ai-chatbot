@@ -12,6 +12,12 @@ class ConversationRepository {
     try {
       const key = this.getRedisKey(userId);
 
+      // Fallback para memória local se redis não estiver disponível
+      if (!(await redisClient.isHealthy())) {
+        logger.warn(`Redis unavailable, using empty history for user ${userId}`);
+        return [];
+      }
+
       // Obtém todos os itens da lista
       const historyItems = await this.client.lRange(key, 0, -1);
 
@@ -19,8 +25,22 @@ class ConversationRepository {
         return [];
       }
 
-      // Converte cada item de string JSON para objeto
-      return historyItems.map(item => JSON.parse(item));
+      // Converte cada item de string JSON para objeto com validação
+      return historyItems.map(item => {
+        try {
+          const parsed = JSON.parse(item);
+          // Validar o formato do objeto
+          if (typeof parsed.role === 'string' && typeof parsed.content === 'string') {
+            return parsed;
+          } else {
+            logger.warn(`Invalid history item format for user ${userId}`);
+            return { role: "system", content: "História de conversação incompleta" };
+          }
+        } catch (parseError) {
+          logger.error(`Error parsing history item for user ${userId}:`, parseError);
+          return { role: "system", content: "História de conversação incompleta" };
+        }
+      });
     } catch (error) {
       logger.error(`Error getting history for user ${userId}:`, error);
       return [];
@@ -68,7 +88,11 @@ class ConversationRepository {
 
   // client property for accessing Redis list-specific operations
   private get client() {
-    return redisClient.getClient();
+    const client = redisClient.getClient();
+    if (!client.isOpen) {
+      throw new Error('Redis client is not connected');
+    }
+    return client;
   }
 }
 

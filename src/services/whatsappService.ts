@@ -9,7 +9,7 @@ import conversationRepository from "../repositories/conversationRepository";
 class WhatsAppService {
   private readonly apiUrl: string = environment.whatsapp.apiUrl;
   private readonly apiToken: string = environment.whatsapp.apiToken;
-  
+
   // Process incoming webhook payload from WhatsApp
   public async processWebhook(payload: WhatsAppWebhookPayload): Promise<void> {
     try {
@@ -30,9 +30,9 @@ class WhatsAppService {
               await this.resendFailedMessage(status.recipient_id);
             }
           }
-          
+
           const messages = change.value.messages || [];
-          
+
           // Process each message
           for (const message of messages) {
             // Only process text messages
@@ -45,10 +45,10 @@ class WhatsAppService {
             } else {
               continue;
             }
-            
+
             const userId = message.from;
             const timestamp = message.timestamp;
-            
+
             logger.info(`Received message from ${userId}: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`);
 
             // Check if the message is a command to disable/enable auto-reply
@@ -56,22 +56,28 @@ class WhatsAppService {
               logger.info(`Ativando auto-reply para ${userId}`);
               await autoReplyService.enable([userId]);
             }
-            
+
             // Add message to buffer for processing
             messageBuffer.addMessage(userId, text, timestamp);
           }
         }
       }
     } catch (error) {
-      logger.error('Error processing webhook:', error);
+      logger.error('Error processing webhook:', error instanceof Error ? error.stack : error);
     }
   }
-  
+
   // Send a message to a WhatsApp user
   public async sendMessage(to: string, text: string): Promise<void> {
     try {
+      const MAX_MESSAGE_LENGTH = 4096;
+      if (text.length > MAX_MESSAGE_LENGTH) {
+        logger.warn(`Message to ${to} exceeds max length, truncating...`);
+        text = text.substring(0, MAX_MESSAGE_LENGTH - 3) + "...";
+      }
+
       logger.info(`Sending message to ${to}: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`);
-      
+
       const response = await axios.post(
         this.apiUrl,
         {
@@ -91,24 +97,33 @@ class WhatsAppService {
           }
         }
       );
-      
+
       logger.debug(`WhatsApp API response status: ${response.status}`);
-      
+
     } catch (error) {
       // Handle axios errors
       if (axios.isAxiosError(error)) {
         const statusCode = error.response?.status ?? 500;
         const errorMessage = error.response?.data?.message ?? error.message;
-        
-        logger.error(`WhatsApp API error (${statusCode}): ${errorMessage}`);
-        
+
+        if (statusCode === 429) {
+          logger.error(`WhatsApp API rate limit exceeded for user ${to}. Retry after: ${error.response?.headers['retry-after'] ?? 'unknown'}`);
+        } else if (statusCode === 400) {
+          logger.error(`WhatsApp API bad request (${statusCode}): ${errorMessage}`, {
+            to,
+            errorDetails: error.response?.data
+          });
+        } else {
+          logger.error(`WhatsApp API error (${statusCode}): ${errorMessage}`);
+        }
+
         const apiError: ApiError = new Error(`WhatsApp API error: ${errorMessage}`);
         apiError.statusCode = statusCode;
         apiError.details = error.response?.data;
-        
+
         throw apiError;
       }
-      
+
       // Handle other errors
       logger.error('Unknown error when calling WhatsApp API:', error);
       throw new Error('Failed to send WhatsApp message');
@@ -139,17 +154,17 @@ class WhatsAppService {
       logger.error(`Error resending message to ${recipientId}:`, error);
     }
   }
-  
+
   // Verify WhatsApp webhook challenge
   public verifyWebhook(mode: string, token: string, challenge: string): string | null {
     // The token you set up in the WhatsApp developer portal
     const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN;
-    
+
     if (mode === 'subscribe' && token === verifyToken) {
       logger.info('WhatsApp webhook verified');
       return challenge;
     }
-    
+
     logger.warn('WhatsApp webhook verification failed');
     return null;
   }
