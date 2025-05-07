@@ -8,9 +8,7 @@ import autoReplyService from "../services/autoReplyService";
 
 class MessageBuffer {
   private readonly buffers: Map<string, BufferedMessage> = new Map();
-  /**
-   * Add a message to the buffer for a specific user
-   */
+  // Add a message to the buffer for a specific user
   public addMessage(userId: string, message: string, timestamp: string): void {
     const existingBuffer = this.buffers.get(userId);
 
@@ -43,8 +41,8 @@ class MessageBuffer {
 
   /**
    * Process the buffer for a specific user
-   * Processa o buffer depois do timeout, envia à IA e devolve a resposta.
-   * Se o auto-responder estiver desativado para esse user, simplesmente limpa o buffer.
+   * Processes the buffer after the timeout, sends it to the AI and returns the response.
+   * If auto-responder is disabled for that user, simply clears the buffer.
    */
   private async processBuffer(userId: string): Promise<void> {
     // Se estiver desativado, limpamos e voltamos
@@ -109,9 +107,7 @@ class MessageBuffer {
     }
   }
 
-  /**
-   * Force process all pending buffers
-   */
+  // Force process all pending buffers
   public processAllBuffers(): void {
     for (const userId of this.buffers.keys()) {
       this.processBuffer(userId);

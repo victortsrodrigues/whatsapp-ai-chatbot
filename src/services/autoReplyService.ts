@@ -11,15 +11,15 @@ class AutoReplyService {
     await this.initializeFromRedis();
   }
 
-  // Inicializa a cache a partir do Redis
+  // Initialize the cache from Redis
   private async initializeFromRedis(): Promise<void> {
     try {
       const enabledUsers = await redisClient.lRange(this.REDIS_KEY, 0, -1);
 
-      // Limpa a cache local
+      // Clear local cache
       this.enabledUsersCache.clear();
 
-      // Popula a cache local com os valores do Redis
+      // Populates the local cache with values from Redis
       enabledUsers.forEach(userId => {
         this.enabledUsersCache.add(userId);
       });
@@ -31,14 +31,14 @@ class AutoReplyService {
     }
   }
   
-  // Desativa o auto-responder para esses userIds
+  // Disable autoresponder for these users
   public async disable(userIds: string[]): Promise<void> {
     try {
       for (const userId of userIds) {
-        // Remove da cache local
+        // Remove from local cache
         this.enabledUsersCache.delete(userId);
 
-        // Encontra e remove do Redis
+        // Find and remove from Redis
         const client = redisClient.getClient();
         await client.lRem(this.REDIS_KEY, 0, userId);
 
@@ -49,15 +49,15 @@ class AutoReplyService {
     }
   }
 
-  // Ativa o auto-responder para esses userIds
+  // Enable autoresponder for these users
   public async enable(userIds: string[]): Promise<void> {
     try {
       for (const userId of userIds) {
-        // Adiciona à cache local se ainda não existir
+        // Add to local cache if not already present
         if (!this.enabledUsersCache.has(userId)) {
           this.enabledUsersCache.add(userId);
 
-          // Adiciona ao Redis se não existir
+          // Add to Redis if not exists
           await redisClient.rPush(this.REDIS_KEY, userId);
 
           logger.info(`Auto-reply ativado para ${userId}`);
@@ -68,9 +68,9 @@ class AutoReplyService {
     }
   }
 
-  // Checa se está ativado
+  // Check if it is activated
   public isEnabled(userId: string): boolean {
-    // Se ainda não inicializou do Redis, assume que está desabilitado
+    // If you haven't initialized Redis yet, assume it is disabled
     if (!this.initialized) {
       logger.warn(`AutoReplyService ainda não inicializado ao verificar ${userId}`);
       return false;
@@ -78,10 +78,10 @@ class AutoReplyService {
     return this.enabledUsersCache.has(userId);
   }
 
-  // Obtém todos os usuários habilitados
+  // Get all enabled users
   public async getAllEnabled(): Promise<string[]> {
     try {
-      // Atualiza a cache antes de retornar
+      // Updates cache before returning
       await this.initializeFromRedis();
       return Array.from(this.enabledUsersCache);
     } catch (error) {

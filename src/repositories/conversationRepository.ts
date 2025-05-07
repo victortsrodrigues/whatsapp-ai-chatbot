@@ -3,13 +3,11 @@ import logger from '../utils/logger';
 import redisClient from '../utils/redisClient';
 
 class ConversationRepository {
-  private readonly MAX_HISTORY_LENGTH = 6; // Mantém 3 interações (pergunta + resposta para cada)
+  private readonly MAX_HISTORY_LENGTH = 6; // Keep 3 interactions (question + answer for each)
   private readonly HISTORY_PREFIX = 'history:';
-  private readonly EXPIRY_TIME = 60 * 60 * 24 * 14; // 14 dias em segundos
+  private readonly EXPIRY_TIME = 60 * 60 * 24 * 14; // 14 days in seconds
 
-  /**
-   * Get conversation history for a user
-   */
+  // Get conversation history for a user
   public async getHistory(userId: string): Promise<ConversationHistory[]> {
     try {
       const key = this.getRedisKey(userId);
@@ -29,9 +27,7 @@ class ConversationRepository {
     }
   }
 
-  /**
-   * Add a new conversation entry for a user
-   */
+  // Add a new conversation entry for a user
   public async addConversation(userId: string, query: string, response: string): Promise<void> {
     try {
       const key = this.getRedisKey(userId);
@@ -54,9 +50,7 @@ class ConversationRepository {
     }
   }
 
-  /**
-   * Clear conversation history for a user
-   */
+  // Clear conversation history for a user
   public async clearHistory(userId: string): Promise<void> {
     try {
       const key = this.getRedisKey(userId);
@@ -67,14 +61,12 @@ class ConversationRepository {
     }
   }
 
-  /**
-   * Get Redis key for user history
-   */
+  // Get Redis key for user history
   private getRedisKey(userId: string): string {
     return `${this.HISTORY_PREFIX}${userId}`;
   }
 
-  // Propriedade client para acesso às operações específicas de lista do Redis
+  // client property for accessing Redis list-specific operations
   private get client() {
     return redisClient.getClient();
   }

@@ -2,9 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { ApiError } from '../interfaces';
 import logger from '../utils/logger';
 
-/**
- * Central error handling middleware
- */
+// Central error handling middleware
 export const errorHandler = (
   err: Error | ApiError,
   req: Request,
@@ -55,9 +53,7 @@ export const errorHandler = (
   });
 };
 
-/**
- * Handle 404 errors - must be placed after all routes
- */
+// Handle 404 errors - must be placed after all routes
 export const notFoundHandler = (
   req: Request,
   res: Response,

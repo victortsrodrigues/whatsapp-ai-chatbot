@@ -8,14 +8,12 @@ import redisClient from "../utils/redisClient";
 
 class WhatsAppController {
 
-  /** Basic message for testing */
+  // Basic message for testing
   public baseMessage(req: Request, res: Response): void {
     res.send("Olá, eu sou o seu assistente virtual!");
   }
 
-  /**
-   * Handle incoming webhooks from WhatsApp
-   */
+  // Handle incoming webhooks from WhatsApp
   public async handleWebhook(req: Request, res: Response): Promise<void> {
     try {
       const payload = req.body as WhatsAppWebhookPayload;
@@ -33,9 +31,7 @@ class WhatsAppController {
     }
   }
 
-  /**
-   * Verify the webhook subscription
-   */
+  // Verify the webhook subscription
   public verifyWebhook(req: Request, res: Response): void {
     try {
       const mode = req.query["hub.mode"] as string;
@@ -61,9 +57,7 @@ class WhatsAppController {
     }
   }
 
-  /**
-   * Health check endpoint for the API
-   */
+  // Health check endpoint for the API
   public async healthCheck(req: Request, res: Response): Promise<void> {
     try {
       // Check the AI service health
@@ -92,10 +86,9 @@ class WhatsAppController {
     }
   }
 
-  /** Desativa o auto-responder para os users especificados */
+  // Disables auto-responder for specified users
   public async disableAutoReply(req: Request, res: Response): Promise<void> {
     try {
-      // Verifica se o body contém a propriedade userIds e se é um array
       if (!req.body.userIds || !Array.isArray(req.body.userIds)) {
         res.status(400).json({
           status: "error",
@@ -130,10 +123,10 @@ class WhatsAppController {
     }
   }
 
-  /** Reativa o auto-responder para os users especificados */
+  // Reactivates autoresponder for specified users
   public async enableAutoReply(req: Request, res: Response): Promise<void> {
     try {
-      // Verifica se o body contém a propriedade userIds e se é um array
+      // Checks if the body contains the userIds property and if it is an array
       if (!req.body.userIds || !Array.isArray(req.body.userIds)) {
         res.status(400).json({
           status: "error",
@@ -168,7 +161,7 @@ class WhatsAppController {
     }
   }
 
-  /** Lista todos os usuários com auto-reply habilitado */
+  // List all users with auto-reply enabled
   public async listEnabledUsers(req: Request, res: Response): Promise<void> {
     try {
       const enabledUsers = await autoReplyService.getAllEnabled();

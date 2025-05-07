@@ -52,11 +52,11 @@ app.use(errorHandler);
 const startServer = async (): Promise<void> => {
   const port = environment.port;
 
-  // Verificar conexão com Redis antes de iniciar o servidor
+  // Check connection to Redis before starting the server
   try {
     logger.info("Verificando conexão com Redis...");
 
-    // Esperar um pouco pela tentativa de conexão
+    // Wait a little while for the connection attempt
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     if (!(await redisClient.isHealthy())) {

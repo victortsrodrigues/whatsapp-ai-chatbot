@@ -8,9 +8,7 @@ class AIService {
 
   private readonly systemMessage: string = environment.ai.systemMessage || '';
   
-  /**
-   * Query the AI microservice with user message and conversation history
-   */
+  // Query the AI microservice with user message and conversation history
   public async queryAI(
     query: string, 
     userId: string, 
@@ -65,9 +63,7 @@ class AIService {
     }
   }
   
-  /**
-   * Check if the AI service is healthy
-   */
+  // Check if the AI service is healthy
   public async checkHealth(): Promise<boolean> {
     try {
       const healthUrl = this.serviceUrl.replace('/rag/query', '/health/ready');
