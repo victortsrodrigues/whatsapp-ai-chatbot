@@ -3,7 +3,8 @@ import { WhatsAppWebhookPayload, ApiError } from '../interfaces';
 import environment from '../config/environment';
 import logger from '../utils/logger';
 import messageBuffer from '../utils/messageBuffer';
-import autoReplyService from './autoReplyService'
+import autoReplyService from './autoReplyService';
+import conversationRepository from "../repositories/conversationRepository";
 
 class WhatsAppService {
   private readonly apiUrl: string = environment.whatsapp.apiUrl;
@@ -21,6 +22,14 @@ class WhatsAppService {
       for (const entry of payload.entry) {
         for (const change of entry.changes) {
           if (change.field !== 'messages') continue;
+
+          const statuses = change.value.statuses || [];
+          for (const status of statuses) {
+            if (status.status === 'failed' || status.status === 'unable_to_deliver') {
+              logger.warn(`Message ${status.id} failed to deliver to ${status.recipient_id}`);
+              await this.resendFailedMessage(status.recipient_id);
+            }
+          }
           
           const messages = change.value.messages || [];
           
@@ -103,6 +112,31 @@ class WhatsAppService {
       // Handle other errors
       logger.error('Unknown error when calling WhatsApp API:', error);
       throw new Error('Failed to send WhatsApp message');
+    }
+  }
+
+  // Search for the last message sent to this user
+  private async resendFailedMessage(recipientId: string): Promise<void> {
+    try {
+      const history = await conversationRepository.getHistory(recipientId);
+
+      if (history.length > 0) {
+        let lastSystemMessage = '';
+
+        for (let i = history.length - 1; i >= 0; i--) {
+          if (history[i].role === 'assistant') {
+            lastSystemMessage = history[i].content;
+            break;
+          }
+        }
+
+        if (lastSystemMessage) {
+          logger.info(`Resending last message to ${recipientId}`);
+          await this.sendMessage(recipientId, lastSystemMessage);
+        }
+      }
+    } catch (error) {
+      logger.error(`Error resending message to ${recipientId}:`, error);
     }
   }
   

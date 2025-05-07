@@ -11,6 +11,13 @@ export interface WhatsAppMessage {
   };
 }
 
+export interface WhatsAppStatus {
+  id: string;
+  status: string;
+  recipient_id: string;
+  timestamp: string;
+}
+
 export interface WhatsAppWebhookPayload {
   object: string;
   entry: Array<{
