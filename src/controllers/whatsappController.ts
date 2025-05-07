@@ -92,24 +92,99 @@ class WhatsAppController {
     }
   }
 
-  /** Desativa o auto-responder para um user específico */
-  public disableAutoReply(req: Request, res: Response): void {
-    const { userId } = req.params;
-    autoReplyService.disable(userId);
-    res.status(200).json({
-      status: "ok",
-      message: `Auto-reply desativado para ${userId}`,
-    });
+  /** Desativa o auto-responder para os users especificados */
+  public async disableAutoReply(req: Request, res: Response): Promise<void> {
+    try {
+      // Verifica se o body contém a propriedade userIds e se é um array
+      if (!req.body.userIds || !Array.isArray(req.body.userIds)) {
+        res.status(400).json({
+          status: "error",
+          message: "O corpo da requisição deve conter um array 'userIds'",
+        });
+        return;
+      }
+
+      const userIds: string[] = req.body.userIds;
+
+      if (userIds.length === 0) {
+        res.status(400).json({
+          status: "error",
+          message: "O array 'userIds' não pode estar vazio",
+        });
+        return;
+      }
+
+      await autoReplyService.disable(userIds);
+
+      res.status(200).json({
+        status: "ok",
+        message: `Auto-reply desativado para ${userIds.length} usuário(s)`,
+        userIds: userIds
+      });
+    } catch (error) {
+      logger.error("Erro ao desativar auto-reply:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Erro interno ao desativar auto-reply",
+      });
+    }
   }
 
-  /** Reativa o auto-responder para um user específico */
-  public enableAutoReply(req: Request, res: Response): void {
-    const { userId } = req.params;
-    autoReplyService.enable(userId);
-    res.status(200).json({
-      status: "ok",
-      message: `Auto-reply ativado para ${userId}`,
-    });
+  /** Reativa o auto-responder para os users especificados */
+  public async enableAutoReply(req: Request, res: Response): Promise<void> {
+    try {
+      // Verifica se o body contém a propriedade userIds e se é um array
+      if (!req.body.userIds || !Array.isArray(req.body.userIds)) {
+        res.status(400).json({
+          status: "error",
+          message: "O corpo da requisição deve conter um array 'userIds'",
+        });
+        return;
+      }
+
+      const userIds: string[] = req.body.userIds;
+
+      if (userIds.length === 0) {
+        res.status(400).json({
+          status: "error",
+          message: "O array 'userIds' não pode estar vazio",
+        });
+        return;
+      }
+
+      await autoReplyService.enable(userIds);
+
+      res.status(200).json({
+        status: "ok",
+        message: `Auto-reply ativado para ${userIds.length} usuário(s)`,
+        userIds: userIds
+      });
+    } catch (error) {
+      logger.error("Erro ao ativar auto-reply:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Erro interno ao ativar auto-reply",
+      });
+    }
+  }
+
+  /** Lista todos os usuários com auto-reply habilitado */
+  public async listEnabledUsers(req: Request, res: Response): Promise<void> {
+    try {
+      const enabledUsers = await autoReplyService.getAllEnabled();
+
+      res.status(200).json({
+        status: "ok",
+        count: enabledUsers.length,
+        userIds: enabledUsers
+      });
+    } catch (error) {
+      logger.error("Erro ao listar usuários habilitados:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Erro interno ao listar usuários habilitados",
+      });
+    }
   }
 }
 

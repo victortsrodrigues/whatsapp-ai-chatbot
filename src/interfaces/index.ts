@@ -6,6 +6,9 @@ export interface WhatsAppMessage {
   text?: {
     body: string;
   };
+  image?: {
+    caption: string;
+  };
 }
 
 export interface WhatsAppWebhookPayload {

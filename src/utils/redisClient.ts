@@ -177,6 +177,20 @@ class RedisClient {
     }
   }
 
+  // Remove elementos de uma lista baseado no valor
+  public async lRem(key: string, count: number, value: string): Promise<number> {
+    try {
+      if (!this.isConnected) {
+        logger.warn('Redis not connected, trying to reconnect...');
+        await this.connect();
+      }
+      return await this.client.lRem(key, count, value);
+    } catch (error) {
+      logger.error(`Error removing value from list ${key} in Redis:`, error);
+      return 0;
+    }
+  }
+
   // Set expiration time for a key
   public async expire(key: string, seconds: number): Promise<void> {
     try {

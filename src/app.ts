@@ -38,8 +38,9 @@ app.get("/webhook", whatsappController.verifyWebhook);
 app.post("/webhook", validateWebhookPayload, whatsappController.handleWebhook);
 
 // Routes to pause/resume or auto-reply on specific conversation
-app.post("/chatbot/:userId/disable", whatsappController.disableAutoReply);
-app.post("/chatbot/:userId/enable",  whatsappController.enableAutoReply);
+app.post("/chatbot/disable", whatsappController.disableAutoReply);
+app.post("/chatbot/enable", whatsappController.enableAutoReply);
+app.get("/chatbot/enabled", whatsappController.listEnabledUsers);
 
 // Handle 404 errors
 app.use(notFoundHandler);
