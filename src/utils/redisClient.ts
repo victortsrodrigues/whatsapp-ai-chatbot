@@ -41,11 +41,18 @@ class RedisClient {
       logger.info('Redis connection ended');
       this.isConnected = false;
     });
-
-    // Connect to redis
-    this.connect();
   }
 
+  async initialize(): Promise<void> {
+      try {
+          await this.client.connect();
+          logger.info('Redis connection successfully initialized');
+      } catch (error) {
+          logger.error('Failed to initialize Redis connection', error);
+          this.isConnected = false;
+      }
+  }
+  
   private async connect(): Promise<void> {
     try {
       if (this.client.isOpen) {
@@ -217,5 +224,13 @@ class RedisClient {
 
 // Create a singleton instance
 const redisClient = new RedisClient();
+// Wrap the initialization in an async function
+(async () => {
+  try {
+    await redisClient.initialize();
+  } catch (error) {
+    logger.error('Failed to initialize Redis client:', error);
+  }
+})();
 
 export default redisClient;

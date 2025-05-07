@@ -3,12 +3,12 @@ import redisClient from '../utils/redisClient';
 
 class AutoReplyService {
   private readonly REDIS_KEY = 'enabled_users';
-  private enabledUsersCache = new Set<string>();
+  private readonly enabledUsersCache = new Set<string>();
   private initialized = false;
 
-  constructor() {
-    // Inicializar a cache do Redis quando o serviço for criado
-    this.initializeFromRedis();
+  // Public method to initialize the service
+  public async initialize(): Promise<void> {
+    await this.initializeFromRedis();
   }
 
   // Inicializa a cache a partir do Redis
@@ -91,4 +91,13 @@ class AutoReplyService {
   }
 }
 
-export default new AutoReplyService();
+const autoReplyService = new AutoReplyService();
+(async () => {
+  try {
+    await autoReplyService.initialize();
+  } catch (error) {
+    logger.error('Failed to initialize AutoReplyService:', error);
+  }
+})();
+
+export default autoReplyService;
