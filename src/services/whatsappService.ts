@@ -5,6 +5,39 @@ import logger from '../utils/logger';
 import messageBuffer from '../utils/messageBuffer';
 import autoReplyService from './autoReplyService';
 import conversationRepository from "../repositories/conversationRepository";
+import { setTimeout } from 'timers/promises';
+
+class MessageQueue {
+  private static readonly MAX_RETRIES = 3;
+  private static readonly BACKOFF_FACTOR = 2;
+  private static readonly queue: Map<string, { to: string; text: string; attempts: number }> = new Map();
+
+  static async add(to: string, text: string, retryAfter: number, attempt = 1): Promise<void> {
+    const key = `${to}-${Date.now()}`;
+
+    this.queue.set(key, { to, text, attempts: attempt });
+
+    await setTimeout(retryAfter * 1000);
+    await this.retrySend(key);
+  }
+
+  private static async retrySend(key: string): Promise<void> {
+    const entry = this.queue.get(key);
+    if (!entry) return;
+
+    try {
+      const whatsappService = new WhatsAppService();
+      await whatsappService.sendMessage(entry.to, entry.text);
+      this.queue.delete(key);
+    } catch (error) {
+      if (entry.attempts < this.MAX_RETRIES && axios.isAxiosError(error)) {
+        const retryAfter = Number(error.response?.headers?.['retry-after']) || 60;
+        const nextDelay = retryAfter * this.BACKOFF_FACTOR ** entry.attempts;
+        await this.add(entry.to, entry.text, nextDelay, entry.attempts + 1);
+      }
+    }
+  }
+}
 
 class WhatsAppService {
   private readonly apiUrl: string = environment.whatsapp.apiUrl;
@@ -107,7 +140,14 @@ class WhatsAppService {
         const errorMessage = error.response?.data?.message ?? error.message;
 
         if (statusCode === 429) {
-          logger.error(`WhatsApp API rate limit exceeded for user ${to}. Retry after: ${error.response?.headers['retry-after'] ?? 'unknown'}`);
+          const retryAfter = Number(error.response?.headers?.['retry-after']) || 60;
+          logger.warn(`Rate limited. Enqueuing message to ${to}. Retry in ${retryAfter}s`);
+
+          MessageQueue.add(to, text, retryAfter).catch((queueError) => {
+            logger.error('Queue processing failed:', queueError);
+          });
+
+          throw new Error(`Message enqueued for retry. Next attempt in ${retryAfter}s`);
         } else if (statusCode === 400) {
           logger.error(`WhatsApp API bad request (${statusCode}): ${errorMessage}`, {
             to,
