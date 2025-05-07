@@ -24,10 +24,10 @@ class AIService {
         return response;
       },
       {
-        timeout: 30000, // Timeout individual
-        errorThresholdPercentage: 50, // Abre após 50% de falhas
-        resetTimeout: 30000, // Tempo em meio-aberto
-        rollingCountTimeout: 10000, // Janela de análise de falhas
+        timeout: 30000,
+        errorThresholdPercentage: 30, // Opens after 30% failures
+        resetTimeout: 60000,
+        rollingCountTimeout: 10000,
         rollingCountBuckets: 5
       }
     );

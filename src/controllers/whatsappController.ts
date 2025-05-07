@@ -19,8 +19,12 @@ class WhatsAppController {
       const payload = req.body as WhatsAppWebhookPayload;
 
       // Process the webhook asynchronously
-      setImmediate(() => {
-        whatsappService.processWebhook(payload);
+      process.nextTick(async () => {
+        try {
+          await whatsappService.processWebhook(payload);
+        } catch (error) {
+          logger.error("Error processing webhook:", error);
+        }
       });
 
       // Respond quickly to webhook

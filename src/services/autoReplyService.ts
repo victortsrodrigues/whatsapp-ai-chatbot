@@ -13,24 +13,25 @@ class AutoReplyService {
 
   // Initialize the cache from Redis
   private async initializeFromRedis(): Promise<void> {
-    try {
-      const enabledUsers = await redisClient.lRange(this.REDIS_KEY, 0, -1);
-
-      // Clear local cache
-      this.enabledUsersCache.clear();
-
-      // Populates the local cache with values from Redis
-      enabledUsers.forEach(userId => {
-        this.enabledUsersCache.add(userId);
-      });
-
-      this.initialized = true;
-      logger.info(`AutoReplyService inicializado com ${this.enabledUsersCache.size} usuários ativos`);
-    } catch (error) {
-      logger.error('Erro ao inicializar AutoReplyService do Redis:', error);
+    let attempts = 0;
+    const MAX_ATTEMPTS = 5;
+    while (attempts < MAX_ATTEMPTS) {
+      try {
+        const enabledUsers = await redisClient.lRange(this.REDIS_KEY, 0, -1);
+        this.enabledUsersCache.clear();
+        enabledUsers.forEach(userId => this.enabledUsersCache.add(userId));
+        this.initialized = true;
+        logger.info(`AutoReplyService initialized with ${this.enabledUsersCache.size} active users.`);
+        return;
+      } catch (error) {
+        attempts++;
+        logger.error(`${attempts} initialization attempt failed.`, error);
+        await new Promise(resolve => setTimeout(resolve, 5000 * attempts));
+      }
     }
+    logger.error("Critical failure while initializing AutoReplyService.");
   }
-  
+
   // Disable autoresponder for these users
   public async disable(userIds: string[]): Promise<void> {
     try {
@@ -42,10 +43,10 @@ class AutoReplyService {
         const client = redisClient.getClient();
         await client.lRem(this.REDIS_KEY, 0, userId);
 
-        logger.info(`Auto-reply desativado para ${userId}`);
+        logger.info(`Auto-reply disabled for${userId}`);
       }
     } catch (error) {
-      logger.error(`Erro ao desativar auto-reply:`, error);
+      logger.error(`Error disabling auto-reply:`, error);
     }
   }
 
@@ -58,13 +59,14 @@ class AutoReplyService {
           this.enabledUsersCache.add(userId);
 
           // Add to Redis if not exists
-          await redisClient.rPush(this.REDIS_KEY, userId);
-
-          logger.info(`Auto-reply ativado para ${userId}`);
+          if (await redisClient.isHealthy()) {
+            await redisClient.rPush(this.REDIS_KEY, userId);
+            logger.info(`Auto-reply enabled for ${userId}`);
+          }
         }
       }
     } catch (error) {
-      logger.error(`Erro ao ativar auto-reply:`, error);
+      logger.error(`Error activating auto-reply:`, error);
     }
   }
 
@@ -72,7 +74,7 @@ class AutoReplyService {
   public isEnabled(userId: string): boolean {
     // If you haven't initialized Redis yet, assume it is disabled
     if (!this.initialized) {
-      logger.warn(`AutoReplyService ainda não inicializado ao verificar ${userId}`);
+      logger.warn(`AutoReplyService not yet initialized when checking ${userId}`);
       return false;
     }
     return this.enabledUsersCache.has(userId);
@@ -85,7 +87,7 @@ class AutoReplyService {
       await this.initializeFromRedis();
       return Array.from(this.enabledUsersCache);
     } catch (error) {
-      logger.error('Erro ao obter lista de usuários habilitados:', error);
+      logger.error('Error getting list of enabled users:', error);
       return Array.from(this.enabledUsersCache);
     }
   }
