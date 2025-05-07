@@ -48,7 +48,7 @@ class MessageBuffer {
    */
   private async processBuffer(userId: string): Promise<void> {
     // Se estiver desativado, limpamos e voltamos
-    if (autoReplyService.isDisabled(userId)) {
+    if (!autoReplyService.isEnabled(userId)) {
       logger.info(
         `Auto-reply desativado para ${userId}, limpando buffer e não respondendo.`
       );

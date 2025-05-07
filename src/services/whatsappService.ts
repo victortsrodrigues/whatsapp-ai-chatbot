@@ -8,16 +8,14 @@ class WhatsAppService {
   private readonly apiUrl: string = environment.whatsapp.apiUrl;
   private readonly apiToken: string = environment.whatsapp.apiToken;
   
-  /**
-   * Process incoming webhook payload from WhatsApp
-   */
+  // Process incoming webhook payload from WhatsApp
   public processWebhook(payload: WhatsAppWebhookPayload): void {
     try {
       if (payload.object !== 'whatsapp_business_account') {
         logger.warn(`Received non-WhatsApp webhook: ${payload.object}`);
         return;
       }
-      
+
       // Process each entry in the webhook
       for (const entry of payload.entry) {
         for (const change of entry.changes) {
@@ -46,9 +44,7 @@ class WhatsAppService {
     }
   }
   
-  /**
-   * Send a message to a WhatsApp user
-   */
+  // Send a message to a WhatsApp user
   public async sendMessage(to: string, text: string): Promise<void> {
     try {
       logger.info(`Sending message to ${to}: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`);
@@ -96,9 +92,7 @@ class WhatsAppService {
     }
   }
   
-  /**
-   * Verify WhatsApp webhook challenge
-   */
+  // Verify WhatsApp webhook challenge
   public verifyWebhook(mode: string, token: string, challenge: string): string | null {
     // The token you set up in the WhatsApp developer portal
     const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN;
