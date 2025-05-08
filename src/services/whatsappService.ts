@@ -86,7 +86,7 @@ class WhatsAppService {
 
             // Check if the message is a command to disable/enable auto-reply
             if (text.trim().toLowerCase() === 'vi esse anúncio e gostaria de mais informações') {
-              logger.info(`Ativando auto-reply para ${userId}`);
+              logger.info(`Enabling auto-reply for ${userId}`);
               await autoReplyService.enable([userId]);
             }
 

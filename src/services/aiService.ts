@@ -3,6 +3,7 @@ import { AIRequest, AIResponse, ConversationHistory, ApiError } from '../interfa
 import environment from '../config/environment';
 import logger from '../utils/logger';
 import CircuitBreaker from 'opossum';
+import servicesInitialization from '../utils/servicesInitialization';
 
 class AIService {
   private readonly serviceUrl: string = environment.ai.serviceUrl;
@@ -32,23 +33,23 @@ class AIService {
       }
     );
 
-    // Eventos para logging
+    // Logging events
     this.circuitBreaker.fallback(() => {
       return { 
         status: 503, 
         data: { 
-          response: "Serviço de IA temporariamente indisponível. Tente novamente mais tarde." 
+          response: "AI service temporarily unavailable. Please try again later." 
         } 
       };
     });
     this.circuitBreaker.on('open', () => 
-      logger.error('Circuit breaker ABERTO: Chamadas ao AI service suspensas')
+      logger.error('Circuit breaker OPEN: AI service calls suspended')
     );
     this.circuitBreaker.on('halfOpen', () => 
-      logger.info('Circuit breaker MEIO-ABERTO: Testando recuperação')
+      logger.info('Circuit breaker HALF-OPEN: Testing recovery')
     );
     this.circuitBreaker.on('close', () => 
-      logger.info('Circuit breaker FECHADO: Chamadas ao AI service normalizadas')
+      logger.info('Circuit breaker CLOSED: AI service calls normalized')
     );
   }
 
@@ -62,35 +63,8 @@ class AIService {
       logger.info(`Sending query to AI service for user ${userId}`);
 
       // Check if AI service is healthy
-      let isAIReady = false;
-      let attempts = 1;
-      const maxAttempts = 5;
-      while (!isAIReady && attempts <= maxAttempts) {
-        try {
-          isAIReady = await this.checkHealth();
-          if (!isAIReady) {
-            logger.warn(`AI service is not healthy. Attempt ${attempts} of ${maxAttempts}. Retrying...`);
-            if (attempts < maxAttempts) {
-              const waitTime = 10000 * attempts;
-              logger.info(`Waiting ${waitTime / 1000} seconds before retrying...`);
-              await new Promise(resolve => setTimeout(resolve, waitTime));
-            }
-            attempts++;
-          }
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-          const errorName = error instanceof Error ? error.name : 'UnknownError';
-          logger.error(`Erro na tentativa ${attempts}/${maxAttempts} ao verificar conexão com o microserviço AI: ${errorName} - ${errorMessage}`);
+      const isAIReady = await servicesInitialization.checkAIServiceHealth();
 
-          if (attempts < maxAttempts) {
-            const waitTime = 10000 * attempts;
-            logger.info(`Aguardando ${waitTime / 1000} segundos antes da próxima tentativa...`);
-            await new Promise(resolve => setTimeout(resolve, waitTime));
-          }
-          attempts++;
-        }
-
-      }
       if (!isAIReady) {
         logger.error(`AI service is not healthy when processing query for user ${userId}`);
         const apiError: ApiError = new Error('AI service is currently unavailable');

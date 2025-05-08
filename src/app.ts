@@ -11,11 +11,7 @@ import {
 } from "./middleware/requestValidator";
 import whatsappController from "./controllers/whatsappController";
 import logger from "./utils/logger";
-import {
-  initializeRedis,
-  initializeAIService,
-  initializeAutoReplyService,
-} from "./utils/servicesInitialization";
+import servicesInitialization from "./utils/servicesInitialization";
 
 // Create Express application
 const app: Express = express();
@@ -54,9 +50,9 @@ app.use(errorHandler);
 
 // Start the server
 const startServer = async (): Promise<void> => {
-  await initializeRedis();
-  await initializeAIService();
-  await initializeAutoReplyService();
+  await servicesInitialization.initializeRedis();
+  await servicesInitialization.initializeAIService();
+  await servicesInitialization.initializeAutoReplyService();
 
   const port = environment.port;
   server = app.listen(port, () => {

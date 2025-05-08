@@ -10,7 +10,7 @@ class WhatsAppController {
 
   // Basic message for testing
   public baseMessage(req: Request, res: Response): void {
-    res.send("Olá, eu sou o seu assistente virtual!");
+    res.send("Olá, estou pronto para te ajudar!");
   }
 
   // Handle incoming webhooks from WhatsApp
@@ -96,7 +96,7 @@ class WhatsAppController {
       if (!req.body.userIds || !Array.isArray(req.body.userIds)) {
         res.status(400).json({
           status: "error",
-          message: "O corpo da requisição deve conter um array 'userIds'",
+          message: "The request body must contain a 'userIds' array",
         });
         return;
       }
@@ -106,7 +106,7 @@ class WhatsAppController {
       if (userIds.length === 0) {
         res.status(400).json({
           status: "error",
-          message: "O array 'userIds' não pode estar vazio",
+          message: "The 'userIds' array cannot be empty",
         });
         return;
       }
@@ -115,14 +115,14 @@ class WhatsAppController {
 
       res.status(200).json({
         status: "ok",
-        message: `Auto-reply desativado para ${userIds.length} usuário(s)`,
+        message: `Auto-reply disabled for ${userIds.length} user(s)`,
         userIds: userIds
       });
     } catch (error) {
-      logger.error("Erro ao desativar auto-reply:", error);
+      logger.error("Error disabling auto-reply:", error);
       res.status(500).json({
         status: "error",
-        message: "Erro interno ao desativar auto-reply",
+        message: "Internal error when disabling auto-reply",
       });
     }
   }
@@ -134,7 +134,7 @@ class WhatsAppController {
       if (!req.body.userIds || !Array.isArray(req.body.userIds)) {
         res.status(400).json({
           status: "error",
-          message: "O corpo da requisição deve conter um array 'userIds'",
+          message: "The request body must contain a 'userIds' array",
         });
         return;
       }
@@ -144,7 +144,7 @@ class WhatsAppController {
       if (userIds.length === 0) {
         res.status(400).json({
           status: "error",
-          message: "O array 'userIds' não pode estar vazio",
+          message: "The 'userIds' array cannot be empty",
         });
         return;
       }
@@ -153,14 +153,14 @@ class WhatsAppController {
 
       res.status(200).json({
         status: "ok",
-        message: `Auto-reply ativado para ${userIds.length} usuário(s)`,
+        message: `Auto-reply enabled for ${userIds.length} user(s)`,
         userIds: userIds
       });
     } catch (error) {
-      logger.error("Erro ao ativar auto-reply:", error);
+      logger.error("Error enabling auto-reply:", error);
       res.status(500).json({
         status: "error",
-        message: "Erro interno ao ativar auto-reply",
+        message: "Internal error when enabling auto-reply",
       });
     }
   }
@@ -176,10 +176,10 @@ class WhatsAppController {
         userIds: enabledUsers
       });
     } catch (error) {
-      logger.error("Erro ao listar usuários habilitados:", error);
+      logger.error("Error listing enabled users:", error);
       res.status(500).json({
         status: "error",
-        message: "Erro interno ao listar usuários habilitados",
+        message: "Internal error while listing enabled users",
       });
     }
   }
