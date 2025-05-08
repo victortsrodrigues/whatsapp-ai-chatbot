@@ -12,6 +12,7 @@ import {
 import whatsappController from "./controllers/whatsappController";
 import logger from "./utils/logger";
 import servicesInitialization from "./utils/servicesInitialization";
+import { messageProcessingWorker, messageReplyWorker } from './utils/queues';
 
 // Create Express application
 const app: Express = express();
@@ -53,6 +54,10 @@ const startServer = async (): Promise<void> => {
   await servicesInitialization.initializeRedis();
   await servicesInitialization.initializeAIService();
   await servicesInitialization.initializeAutoReplyService();
+
+  // Initialize workers
+  await messageProcessingWorker.waitUntilReady();
+  await messageReplyWorker.waitUntilReady();
 
   const port = environment.port;
   server = app.listen(port, () => {

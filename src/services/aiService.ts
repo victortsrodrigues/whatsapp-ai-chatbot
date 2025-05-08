@@ -128,6 +128,18 @@ class AIService {
         apiError.statusCode = statusCode;
         apiError.details = error.response?.data;
 
+        if (this.circuitBreaker.opened) {
+          throw new Error('Serviço de IA indisponível (Circuit Breaker Aberto)');
+        }
+
+        // Adicione mais detalhes para ajudar no debug
+        logger.error(`Erro detalhado na requisição de IA:
+          Usuário: ${userId}
+          Query: ${query.substring(0, 50)}
+          Histórico: ${history.length} mensagens
+          Erro: ${error.stack ?? error.message}
+        `);
+
         throw apiError;
       }
 
