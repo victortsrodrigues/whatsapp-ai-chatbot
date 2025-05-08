@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { WhatsAppWebhookPayload, ApiError } from '../interfaces';
+import { WhatsAppWebhookPayload, ApiError, WhatsAppMessage } from '../interfaces';
 import environment from '../config/environment';
 import logger from '../utils/logger';
 import messageBuffer from '../utils/messageBuffer';
@@ -56,47 +56,54 @@ class WhatsAppService {
         for (const change of entry.changes) {
           if (change.field !== 'messages') continue;
 
-          const statuses = change.value.statuses || [];
-          for (const status of statuses) {
-            if (status.status === 'failed' || status.status === 'unable_to_deliver') {
-              logger.warn(`Message ${status.id} failed to deliver to ${status.recipient_id}`);
-              await this.resendFailedMessage(status.recipient_id);
-            }
-          }
+          await this.checkMessageStatus(change);
 
           const messages = change.value.messages || [];
 
-          // Process each message
-          for (const message of messages) {
-            // Only process text messages
-            let text: string;
+          await this.processMessages(messages);
 
-            if (message.text?.body) {
-              text = message.text.body;
-            } else if (message.image?.caption) {
-              text = message.image.caption;
-            } else {
-              continue;
-            }
-
-            const userId = message.from;
-            const timestamp = message.timestamp;
-
-            logger.info(`Received message from ${userId}: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`);
-
-            // Check if the message is a command to disable/enable auto-reply
-            if (text.trim().toLowerCase() === 'vi esse anúncio e gostaria de mais informações') {
-              logger.info(`Enabling auto-reply for ${userId}`);
-              await autoReplyService.enable([userId]);
-            }
-
-            // Add message to buffer for processing
-            messageBuffer.addMessage(userId, text, timestamp);
-          }
         }
       }
     } catch (error) {
       logger.error('Error processing webhook:', error instanceof Error ? error.stack : error);
+    }
+  }
+
+  private async processMessages(messages: WhatsAppMessage[]): Promise<void> {
+    for (const message of messages) {
+      let text: string;
+
+      if (message.text?.body) {
+        text = message.text.body;
+      } else if (message.image?.caption) {
+        text = message.image.caption;
+      } else {
+        continue;
+      }
+
+      const userId = message.from;
+      const timestamp = message.timestamp;
+
+      logger.info(`Received message from ${userId}: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`);
+
+      // Check if the message is a command to disable/enable auto-reply
+      if (text.trim().toLowerCase() === 'vi esse anúncio e gostaria de mais informações') {
+        logger.info(`Enabling auto-reply for ${userId}`);
+        await autoReplyService.enable([userId]);
+      }
+
+      // Add message to buffer for processing
+      messageBuffer.addMessage(userId, text, timestamp);
+    }
+  }
+
+  private async checkMessageStatus(change: any): Promise<void> {
+    const statuses = change.value.statuses ?? [];
+    for (const status of statuses) {
+      if (status.status === 'failed' || status.status === 'unable_to_deliver') {
+        logger.warn(`Message ${status.id} failed to deliver to ${status.recipient_id}`);
+        await this.resendFailedMessage(status.recipient_id);
+      }
     }
   }
 
