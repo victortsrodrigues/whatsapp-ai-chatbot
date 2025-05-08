@@ -29,6 +29,8 @@ const environment = {
     url: process.env.REDIS_URL ?? 'redis://localhost:6379',
     ttl: parseInt(process.env.REDIS_TTL ?? (60 * 60 * 24 * 14).toString(), 10), // 14 days in seconds
     password: process.env.REDIS_PASSWORD,
+    host: process.env.REDIS_HOST ?? 'redis-16971.c8.us-east-1-3.ec2.redns.redis-cloud.com',
+    port: parseInt(process.env.REDIS_PORT ?? '16971', 10),
   }
 };
 

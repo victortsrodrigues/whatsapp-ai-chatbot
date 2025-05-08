@@ -9,6 +9,9 @@ class AutoReplyService {
   // Public method to initialize the service
   public async initialize(): Promise<void> {
     await this.initializeFromRedis();
+    setInterval(async () => {
+      await this.initializeFromRedis();
+    }, 300000);
   }
 
   // Initialize the cache from Redis
@@ -94,12 +97,4 @@ class AutoReplyService {
 }
 
 const autoReplyService = new AutoReplyService();
-(async () => {
-  try {
-    await autoReplyService.initialize();
-  } catch (error) {
-    logger.error('Failed to initialize AutoReplyService:', error);
-  }
-})();
-
 export default autoReplyService;

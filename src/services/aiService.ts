@@ -61,6 +61,43 @@ class AIService {
     try {
       logger.info(`Sending query to AI service for user ${userId}`);
 
+      // Check if AI service is healthy
+      let isAIReady = false;
+      let attempts = 1;
+      const maxAttempts = 5;
+      while (!isAIReady && attempts <= maxAttempts) {
+        try {
+          isAIReady = await this.checkHealth();
+          if (!isAIReady) {
+            logger.warn(`AI service is not healthy. Attempt ${attempts} of ${maxAttempts}. Retrying...`);
+            if (attempts < maxAttempts) {
+              const waitTime = 10000 * attempts;
+              logger.info(`Waiting ${waitTime / 1000} seconds before retrying...`);
+              await new Promise(resolve => setTimeout(resolve, waitTime));
+            }
+            attempts++;
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+          const errorName = error instanceof Error ? error.name : 'UnknownError';
+          logger.error(`Erro na tentativa ${attempts}/${maxAttempts} ao verificar conexão com o microserviço AI: ${errorName} - ${errorMessage}`);
+
+          if (attempts < maxAttempts) {
+            const waitTime = 10000 * attempts;
+            logger.info(`Aguardando ${waitTime / 1000} segundos antes da próxima tentativa...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+          }
+          attempts++;
+        }
+
+      }
+      if (!isAIReady) {
+        logger.error(`AI service is not healthy when processing query for user ${userId}`);
+        const apiError: ApiError = new Error('AI service is currently unavailable');
+        apiError.statusCode = 503; // Service Unavailable
+        throw apiError;
+      }
+
       // Prepare request payload
       const requestBody: AIRequest = {
         query,
@@ -72,6 +109,12 @@ class AIService {
       const response = await this.circuitBreaker.fire(requestBody);
 
       logger.info(`AI service responded with status: ${response.status}`);
+
+      if (response.status !== 200) {
+        const apiError: ApiError = new Error(`AI service returned ${response.status}`);
+        apiError.statusCode = response.status;
+        throw apiError;
+      }
 
       if (!response.data) {
         const apiError: ApiError = new Error('Empty response from AI service');

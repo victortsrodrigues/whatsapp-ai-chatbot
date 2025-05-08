@@ -13,8 +13,8 @@ class RedisClient {
       username: 'default',
       password: environment.redis.password,
       socket: {
-          host: 'redis-16971.c8.us-east-1-3.ec2.redns.redis-cloud.com',
-          port: 16971
+          host: environment.redis.host,
+          port: environment.redis.port,
       }
     });
 

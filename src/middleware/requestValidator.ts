@@ -24,10 +24,6 @@ export const validateWebhookPayload = (
       throw new Error("Missing or invalid entry array in webhook payload");
     }
 
-    if (!payload.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.from) {
-      throw new Error("Invalid payload structure: Missing 'from' field.");
-    }
-
     // Continue to route handler
     next();
   } catch (error) {
