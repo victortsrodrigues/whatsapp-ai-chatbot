@@ -5,6 +5,7 @@ import aiService from "../services/aiService";
 import logger from "../utils/logger";
 import autoReplyService from "../services/autoReplyService";
 import redisClient from "../utils/redisClient";
+import { webhookProcessingQueue } from "../utils/queues";
 
 class WhatsAppController {
 
@@ -19,13 +20,7 @@ class WhatsAppController {
       const payload = req.body as WhatsAppWebhookPayload;
 
       // Process the webhook asynchronously
-      process.nextTick(async () => {
-        try {
-          await whatsappService.processWebhook(payload);
-        } catch (error) {
-          logger.error("Error processing webhook:", error);
-        }
-      });
+      await webhookProcessingQueue.add('processWebhook', payload);
 
       // Respond quickly to webhook
       res.status(200).send("OK");

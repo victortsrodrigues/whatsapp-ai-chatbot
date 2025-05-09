@@ -12,7 +12,7 @@ import {
 import whatsappController from "./controllers/whatsappController";
 import logger from "./utils/logger";
 import servicesInitialization from "./utils/servicesInitialization";
-import { messageProcessingWorker, messageReplyWorker } from './utils/queues';
+import { messageProcessingWorker, messageReplyWorker, webhookProcessingWorker } from './utils/queues';
 
 // Create Express application
 const app: Express = express();
@@ -56,6 +56,7 @@ const startServer = async (): Promise<void> => {
   await servicesInitialization.initializeAutoReplyService();
 
   // Initialize workers
+  await webhookProcessingWorker.waitUntilReady();
   await messageProcessingWorker.waitUntilReady();
   await messageReplyWorker.waitUntilReady();
 

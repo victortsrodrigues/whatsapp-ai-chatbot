@@ -5,6 +5,16 @@ import { messageReplyQueue } from './utils/queues';
 import whatsappService from './services/whatsappService';
 import logger from './utils/logger';
 
+export const processWebhookJob = async (job: Job) => {
+  try {
+    const payload = job.data;
+    await whatsappService.processWebhook(payload);
+  } catch (error) {
+    logger.error("Error processing webhook job:", error);
+    throw error;
+  }
+};
+
 export const processMessageJob = async (job: Job) => {
   const { userId, combinedMessage, history } = job.data;
 

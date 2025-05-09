@@ -1,5 +1,5 @@
 import { Queue, Worker } from 'bullmq';
-import { processMessageJob, sendMessageJob } from '../workers';
+import { processMessageJob, sendMessageJob, processWebhookJob } from '../workers';
 import environment from '../config/environment';
 import logger from './logger';
 import redisClient from './redisClient';
@@ -12,6 +12,14 @@ export const redisConnection = {
 };
 
 // Filas
+export const webhookProcessingQueue = new Queue('webhookProcessing', {
+  ...redisConnection,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 1000 }
+  }
+});
+
 export const messageProcessingQueue = new Queue('messageProcessing', {
   ...redisConnection,
   defaultJobOptions: {
@@ -23,6 +31,11 @@ export const messageProcessingQueue = new Queue('messageProcessing', {
 export const messageReplyQueue = new Queue('messageReply', redisConnection);
 
 // Workers (Serão inicializados no app.ts)
+export const webhookProcessingWorker = new Worker('webhookProcessing', processWebhookJob, {
+  ...redisConnection,
+  concurrency: 20
+});
+
 export const messageProcessingWorker = new Worker('messageProcessing', processMessageJob, {
   ...redisConnection,
   concurrency: 20 // Limita processamento paralelo
@@ -34,6 +47,13 @@ export const messageReplyWorker = new Worker('messageReply', sendMessageJob, {
 });
 
 // Após a criação dos workers
+webhookProcessingWorker.on('failed', async (job, err) => {
+  if (job && job.attemptsMade === job.opts?.attempts) {
+    logger.error(`Webhook processing failed for job ${job.id}:`, err);
+    // Adicione lógica de dead-letter queue se necessário
+  }
+});
+
 messageProcessingWorker.on('failed', async (job, err) => {
   if (job && job.attemptsMade === job.opts.attempts) {
     logger.error(`Job ${job.id} falhou após ${job.attemptsMade} tentativas`);
