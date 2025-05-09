@@ -4,14 +4,14 @@ import environment from '../config/environment';
 import logger from './logger';
 import redisClient from './redisClient';
 
-// Conexão compartilhada
+// Shared Redis connection
 export const redisConnection = {
   connection: {
     url: `redis://default:${environment.redis.password}@${environment.redis.host}:${environment.redis.port}`,
   }
 };
 
-// Filas
+// Queues
 export const webhookProcessingQueue = new Queue('webhookProcessing', {
   ...redisConnection,
   defaultJobOptions: {
@@ -31,7 +31,7 @@ export const messageProcessingQueue = new Queue('messageProcessing', {
 
 export const messageReplyQueue = new Queue('messageReply', redisConnection);
 
-// Workers (Serão inicializados no app.ts)
+// Workers
 export const webhookProcessingWorker = new Worker('webhookProcessing', processWebhookJob, {
   ...redisConnection,
   concurrency: 50
@@ -39,19 +39,20 @@ export const webhookProcessingWorker = new Worker('webhookProcessing', processWe
 
 export const messageProcessingWorker = new Worker('messageProcessing', processMessageJob, {
   ...redisConnection,
-  concurrency: 20 // Limita processamento paralelo
+  concurrency: 20
 });
 
 export const messageReplyWorker = new Worker('messageReply', sendMessageJob, {
   ...redisConnection,
-  concurrency: 30 // Limita envios simultâneos
+  concurrency: 30
 });
 
-// Após a criação dos workers
+// Error handling for workers
 webhookProcessingWorker.on('failed', async (job, err) => {
   if (job && job.attemptsMade === job.opts?.attempts) {
     logger.error(`Webhook processing failed for job ${job.id}:`, err);
-    // Adicione lógica de dead-letter queue se necessário
+
+    await redisClient.rPush('dead-letters', JSON.stringify(job.data));
   }
 });
 
@@ -59,17 +60,14 @@ messageProcessingWorker.on('failed', async (job, err) => {
   if (job && job.attemptsMade === job.opts.attempts) {
     logger.error(`Job ${job.id} falhou após ${job.attemptsMade} tentativas`);
     const userId = job.data.userId;
-
-    // Notificação alternativa (ex: enviar para canal de monitoramento)
-    logger.error(`Falha crítica no processamento para usuário ${userId}`);
+    logger.error(`Critical processing failure for user ${userId}`);
   }
 });
 
 messageReplyWorker.on('failed', async (job, err) => {
   if (job && job.attemptsMade === job.opts.attempts) {
-    logger.error(`Mensagem não entregue para ${job.data.userId}:`, job.data.response);
+    logger.error(`Message not delivered for ${job.data.userId}:`, job.data.response);
 
-    // Aqui você pode adicionar lógica para dead-letter queue
     await redisClient.rPush('dead-letters', JSON.stringify(job.data));
   }
 });

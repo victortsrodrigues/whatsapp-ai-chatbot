@@ -33,7 +33,6 @@ export const processMessageJob = async (job: Job) => {
   } catch (error) {
     logger.error(`Job ${job.id} failed for user ${userId}:`, error);
 
-    // Se todas as tentativas falharem, envia mensagem de erro
     if (job.attemptsMade === (job.opts?.attempts ?? 3)) {
       await messageReplyQueue.add('sendError', {
         userId,
@@ -54,10 +53,10 @@ export const sendMessageJob = async (job: Job) => {
   try {
     await whatsappService.sendMessage(userId, response);
   } catch (error) {
-    logger.error(`Falha ao enviar mensagem de erro para ${userId}:`, error);
+    logger.error(`Failed to send error message to ${userId}:`, error);
 
     if (job.attemptsMade === (job.opts?.attempts ?? 2)) {
-      logger.error(`Mensagem crítica não entregue para ${userId}:`, response);
+      logger.error(`Critical undeliverable message for ${userId}:`, response);
     }
 
     throw error;
