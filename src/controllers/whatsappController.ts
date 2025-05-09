@@ -20,7 +20,10 @@ class WhatsAppController {
       const payload = req.body as WhatsAppWebhookPayload;
 
       // Process the webhook asynchronously
-      await webhookProcessingQueue.add('processWebhook', payload);
+      await webhookProcessingQueue.add('processWebhook', payload, {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 1000 }
+      });
 
       // Respond quickly to webhook
       res.status(200).send("OK");

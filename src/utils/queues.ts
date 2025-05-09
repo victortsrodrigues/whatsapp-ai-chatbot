@@ -16,7 +16,8 @@ export const webhookProcessingQueue = new Queue('webhookProcessing', {
   ...redisConnection,
   defaultJobOptions: {
     attempts: 3,
-    backoff: { type: 'exponential', delay: 1000 }
+    backoff: { type: 'exponential', delay: 1000 },
+    removeOnComplete: true
   }
 });
 
@@ -33,7 +34,7 @@ export const messageReplyQueue = new Queue('messageReply', redisConnection);
 // Workers (Serão inicializados no app.ts)
 export const webhookProcessingWorker = new Worker('webhookProcessing', processWebhookJob, {
   ...redisConnection,
-  concurrency: 20
+  concurrency: 50
 });
 
 export const messageProcessingWorker = new Worker('messageProcessing', processMessageJob, {
