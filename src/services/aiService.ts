@@ -11,7 +11,6 @@ class AIService {
   private readonly circuitBreaker: CircuitBreaker<[AIRequest], AxiosResponse<AIResponse>>;
 
   constructor() {
-    // Configure o circuit breaker
     this.circuitBreaker = new CircuitBreaker<[AIRequest], AxiosResponse<AIResponse>>(
       async (requestBody: AIRequest) => {
         const response = await axios.post<AIResponse>(
@@ -34,7 +33,16 @@ class AIService {
     );
 
     // Logging events
-    this.circuitBreaker.fallback(() => {
+    this.circuitBreaker.fallback((requestBody: AIRequest, error: Error) => {
+      logger.error(`Circuit breaker fallback triggered for user ${requestBody.user_id}:`, error);
+      
+      if (error.message.includes('timeout')) {
+        return { 
+          status: 504, 
+          data: { response: "The response is taking longer than expected. Please try again." } 
+        };
+      }
+      
       return { 
         status: 503, 
         data: { 
