@@ -1,11 +1,11 @@
-import logger from "../../utils/logger";
-import messageBuffer from "../../utils/messageBuffer";
-import whatsappService from "../../services/whatsappService";
-import { WhatsAppWebhookPayload } from "../../interfaces/index";
-import autoReplyService from "../../services/autoReplyService";
+import logger from "../../../utils/logger";
+import messageBuffer from "../../../utils/messageBuffer";
+import whatsappService from "../../../services/whatsappService";
+import { WhatsAppWebhookPayload } from "../../../interfaces/index";
+import autoReplyService from "../../../services/autoReplyService";
 import axios from "axios";
-import environment from "../../config/environment";
-import { messageReplyQueue } from "../../utils/queues";
+import environment from "../../../config/environment";
+import { messageReplyQueue } from "../../../utils/queues";
 import conversationRepository from "repositories/conversationRepository";
 
 jest.mock("axios");

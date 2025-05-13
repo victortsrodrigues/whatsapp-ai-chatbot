@@ -1,13 +1,39 @@
 import type { Config } from "@jest/types";
-import baseConfig from "./jest.config";
 
-const integrationConfig: Config.InitialOptions = {
-  ...baseConfig,
-  testMatch: ["**/?(*.)+(int.test).ts"],
-  setupFilesAfterEnv: [], // Remove global mocks
-  detectOpenHandles: false, // Disable for Docker cleanup
-  testTimeout: 30000, // Longer timeout for real operations
-  globalTeardown: "<rootDir>/src/tests/jest.integration.teardown.ts"
+const config: Config.InitialOptions = {
+  preset: "ts-jest",
+  testEnvironment: "node",
+  testMatch: ["**/?(*.)+(integration.test).ts"],
+  moduleFileExtensions: ["ts", "js", "json"],
+  moduleDirectories: ["node_modules", "src"],
+  roots: ["<rootDir>/src"],
+  transform: {
+    ".+\\.ts$": "ts-jest",
+  },
+  collectCoverage: true,
+  coverageDirectory: "coverage-integration",
+  collectCoverageFrom: [
+    "src/**/*.ts",
+    "!src/tests/**/*.ts",
+    "!src/interfaces/**/*.ts",
+  ],
+  coveragePathIgnorePatterns: [
+    "/node_modules/",
+    "/dist/",
+    "/src/interfaces/",
+    "/src/config/",
+    "/src/tests/unit/",
+    ".mock.ts",
+  ],
+  verbose: true,
+  clearMocks: true,
+  testTimeout: 30000, // Tempo maior para testes de integração
+  forceExit: true,
+  detectOpenHandles: true,
+  setupFilesAfterEnv: ["./src/tests/jest.integration.setup.ts"],
+  resetMocks: false,
+  resetModules: false,
+  restoreMocks: true,
 };
 
-export default integrationConfig;
+export default config;

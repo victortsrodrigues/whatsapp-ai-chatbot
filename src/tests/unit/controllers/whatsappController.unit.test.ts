@@ -1,11 +1,11 @@
-import { WhatsAppWebhookPayload } from "../../interfaces/index";
+import { WhatsAppWebhookPayload } from "../../../interfaces/index";
 import { Request, Response } from "express";
-import { webhookProcessingQueue } from "../../utils/queues";
-import whatsappController from "../../controllers/whatsappController";
-import whatsappService from "../../services/whatsappService";
-import logger from "../../utils/logger";
-import aiService from "../../services/aiService";
-import redisClient from "../../utils/redisClient";
+import { webhookProcessingQueue } from "../../../utils/queues";
+import whatsappController from "../../../controllers/whatsappController";
+import whatsappService from "../../../services/whatsappService";
+import logger from "../../../utils/logger";
+import aiService from "../../../services/aiService";
+import redisClient from "../../../utils/redisClient";
 import autoReplyService from "services/autoReplyService";
 
 describe("handleWebhook", () => {

@@ -1,6 +1,6 @@
-import conversationRepository from "../../repositories/conversationRepository";
-import redisClient from "../../utils/redisClient";
-import logger from "../../utils/logger";
+import conversationRepository from "../../../repositories/conversationRepository";
+import redisClient from "../../../utils/redisClient";
+import logger from "../../../utils/logger";
 
 describe("ConversationRepository", () => {
   it("should return parsed conversation history for a valid user", async () => {

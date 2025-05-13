@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { ApiError } from "../../interfaces/index";
-import { errorHandler, notFoundHandler } from "../../middleware/errorHandler";
-import logger from "../../utils/logger";
+import { ApiError } from "../../../interfaces/index";
+import { errorHandler, notFoundHandler } from "../../../middleware/errorHandler";
+import logger from "../../../utils/logger";
 
 describe("errorHandler", () => {
   // Handles ApiError with statusCode, message, and details correctly

@@ -1,8 +1,8 @@
 import axios from "axios";
-import servicesInitialization from "../../utils/servicesInitialization";
-import aiService from "../../services/aiService";
-import { ConversationHistory } from "../../interfaces/index";
-import logger from "../../utils/logger";
+import servicesInitialization from "../../../utils/servicesInitialization";
+import aiService from "../../../services/aiService";
+import { ConversationHistory } from "../../../interfaces/index";
+import logger from "../../../utils/logger";
 
 jest.mock("axios");
 describe("AIService", () => {

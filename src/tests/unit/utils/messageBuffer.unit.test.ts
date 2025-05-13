@@ -1,8 +1,8 @@
-import messageBuffer from "../../utils/messageBuffer";
-import conversationRepository from "../../repositories/conversationRepository";
-import autoReplyService from "../../services/autoReplyService";
-import { messageProcessingQueue } from "../../utils/queues";
-import logger from "../../utils/logger";
+import messageBuffer from "../../../utils/messageBuffer";
+import conversationRepository from "../../../repositories/conversationRepository";
+import autoReplyService from "../../../services/autoReplyService";
+import { messageProcessingQueue } from "../../../utils/queues";
+import logger from "../../../utils/logger";
 
 jest.useFakeTimers();
 describe("MessageBuffer", () => {

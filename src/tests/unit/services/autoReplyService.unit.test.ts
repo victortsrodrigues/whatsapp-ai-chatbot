@@ -1,6 +1,6 @@
-import autoReplyService from "../../services/autoReplyService";
-import redisClient from "../../utils/redisClient";
-import logger from "../../utils/logger";
+import autoReplyService from "../../../services/autoReplyService";
+import redisClient from "../../../utils/redisClient";
+import logger from "../../../utils/logger";
 
 describe("AutoReplyService", () => {
   // initialize() should set up the cache from Redis and start a refresh interval

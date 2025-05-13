@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import {
   validateWebhookPayload,
   validateContentType,
-} from "../../middleware/requestValidator";
-import logger from "../../utils/logger";
+} from "../../../middleware/requestValidator";
+import logger from "../../../utils/logger";
 
 describe("validateWebhookPayload", () => {
   it("should call next() when payload has valid object and entry array", () => {
