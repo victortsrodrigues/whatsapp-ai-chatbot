@@ -5,7 +5,10 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/app.js",
-    "dev": "ts-node-dev src/app.ts"
+    "dev": "ts-node-dev src/app.ts",
+    "test": "jest --runInBand",
+    "test:watch": "jest -- --watchAll --runInBand",
+    "test:coverage": "jest -- --coverage --runInBand"
   },
   "keywords": [
     "whatsapp",

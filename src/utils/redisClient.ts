@@ -236,13 +236,5 @@ class RedisClient {
 
 // Create a singleton instance
 const redisClient = new RedisClient();
-// Wrap the initialization in an async function
-(async () => {
-  try {
-    await redisClient.initialize();
-  } catch (error) {
-    logger.error('Failed to initialize Redis client:', error);
-  }
-})();
 
 export default redisClient;

@@ -32,3 +32,6 @@ Thumbs.db
 
 .replit
 dump.rdb
+
+.qodo
+coverage/

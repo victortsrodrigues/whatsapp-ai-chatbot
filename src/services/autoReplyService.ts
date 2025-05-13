@@ -2,8 +2,8 @@ import logger from '../utils/logger';
 import redisClient from '../utils/redisClient';
 
 class AutoReplyService {
-  private readonly REDIS_KEY = 'enabled_users';
-  private readonly enabledUsersCache = new Set<string>();
+  public readonly REDIS_KEY = 'enabled_users';
+  public readonly enabledUsersCache = new Set<string>();
   private initialized = false;
 
   // Public method to initialize the service
