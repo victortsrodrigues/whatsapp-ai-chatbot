@@ -30,7 +30,7 @@ const config: Config.InitialOptions = {
   testTimeout: 20000,
   forceExit: true,
   detectOpenHandles: true,
-  setupFilesAfterEnv: ["./src/tests/jest.setup.ts"],
+  setupFilesAfterEnv: ["./src/tests/jest.unit.setup.ts"],
   resetMocks: false,
   resetModules: true,
   restoreMocks: true,
