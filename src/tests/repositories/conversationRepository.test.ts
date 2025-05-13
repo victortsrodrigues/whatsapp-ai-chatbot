@@ -25,12 +25,12 @@ describe("ConversationRepository", () => {
     expect(result[1]).toEqual({ role: "assistant", content: "Hi there" });
   });
 
-  // getHistory returns empty array when Redis is unavailable
   it("should return empty array when Redis is unavailable", async () => {
     // Arrange
     const userId = "user123";
 
     jest.spyOn(redisClient, "isHealthy").mockResolvedValue(false);
+    jest.spyOn(redisClient, "lRange").mockResolvedValue([]);
     jest.spyOn(logger, "warn").mockImplementation();
 
     // Act

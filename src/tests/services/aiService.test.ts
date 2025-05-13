@@ -10,6 +10,8 @@ describe("AIService", () => {
     // Arrange
     jest.mock("axios");
     jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     jest
       .spyOn(servicesInitialization, "checkAIServiceHealth")
       .mockResolvedValue(true);
@@ -52,6 +54,8 @@ describe("AIService", () => {
     // Arrange
     jest.mock("axios");
     jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     jest
       .spyOn(servicesInitialization, "checkAIServiceHealth")
       .mockResolvedValue(true);
@@ -91,6 +95,9 @@ describe("AIService", () => {
 
   it("should throw error when AI service is not healthy", async () => {
     // Arrange
+    jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     jest
       .spyOn(servicesInitialization, "checkAIServiceHealth")
       .mockResolvedValue(false);
@@ -110,7 +117,9 @@ describe("AIService", () => {
   it("should handle empty response from AI service", async () => {
     // Arrange
     jest.mock("axios");
-
+    jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     jest
       .spyOn(servicesInitialization, "checkAIServiceHealth")
       .mockResolvedValue(true);
@@ -149,7 +158,9 @@ describe("AIService", () => {
   it("should handle invalid response format from AI service", async () => {
     // Arrange
     jest.mock("axios");
-
+    jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     jest
       .spyOn(servicesInitialization, "checkAIServiceHealth")
       .mockResolvedValue(true);
@@ -189,7 +200,9 @@ describe("AIService", () => {
     // Arrange
     jest.spyOn(axios, 'get').mockResolvedValueOnce({ status: 200 });
     jest.spyOn(servicesInitialization, "checkAIServiceHealth").mockResolvedValue(true);
-
+    jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     // Act
     const result = await aiService.checkHealth();
 
@@ -201,7 +214,9 @@ describe("AIService", () => {
     // Arrange
     jest.spyOn(axios, 'get').mockResolvedValueOnce({ status: 503 });
     jest.spyOn(servicesInitialization, "checkAIServiceHealth").mockResolvedValue(false);
-
+    jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     // Act
     const result = await aiService.checkHealth();
 

@@ -7,7 +7,9 @@ describe("AutoReplyService", () => {
   it("should initialize cache from Redis and set refresh interval", async () => {
     // Mock dependencies
     jest.spyOn(redisClient, "lRange").mockResolvedValue(["user1", "user2"]);
-
+    jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     // Spy on setInterval
     jest.spyOn(global, "setInterval");
 
@@ -38,7 +40,8 @@ describe("AutoReplyService", () => {
     jest.spyOn(redisClient, "isHealthy").mockResolvedValue(true);
     jest.spyOn(redisClient, "rPush").mockResolvedValue(1);
     jest.spyOn(logger, "info").mockImplementation();
-
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     // Act
     await autoReplyService.enable([userId]);
 
@@ -61,6 +64,8 @@ describe("AutoReplyService", () => {
     jest.spyOn(redisClient, "isHealthy").mockResolvedValue(true);
     jest.spyOn(redisClient, "rPush").mockResolvedValue(1);
     jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
 
     // Act
     await autoReplyService.enable([]);
@@ -74,6 +79,9 @@ describe("AutoReplyService", () => {
 
   it("should remove user from cache and Redis when disabling auto-reply", async () => {
     // Arrange
+    jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     const mockDelete = jest.fn();
     const mockLRem = jest.fn().mockResolvedValue(1);
     const mockGetClient = jest.fn().mockReturnValue({
@@ -96,6 +104,9 @@ describe("AutoReplyService", () => {
 
   it("should remove user from Redis even when not in cache", async () => {
     // Arrange
+    jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     const mockDelete = jest.fn();
     const mockLRem = jest.fn().mockResolvedValue(1);
     const mockGetClient = jest.fn().mockReturnValue({

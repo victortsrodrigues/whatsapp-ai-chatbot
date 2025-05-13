@@ -2,6 +2,7 @@ import messageBuffer from "../../utils/messageBuffer";
 import conversationRepository from "../../repositories/conversationRepository";
 import autoReplyService from "../../services/autoReplyService";
 import { messageProcessingQueue } from "../../utils/queues";
+import logger from "../../utils/logger";
 
 jest.useFakeTimers();
 describe("MessageBuffer", () => {
@@ -10,6 +11,7 @@ describe("MessageBuffer", () => {
     jest.spyOn(conversationRepository, "getHistory").mockResolvedValue([]);
     jest.spyOn(autoReplyService, "isEnabled").mockReturnValue(true);
     jest.spyOn(messageProcessingQueue, "add").mockResolvedValue({} as any);
+    jest.spyOn(logger, "info").mockImplementation();
 
     // Setup
     const userId = "user123";
@@ -47,6 +49,7 @@ describe("MessageBuffer", () => {
     jest.spyOn(conversationRepository, "getHistory").mockResolvedValue([]);
     jest.spyOn(autoReplyService, "isEnabled").mockReturnValue(true);
     jest.spyOn(messageProcessingQueue, "add").mockResolvedValue({} as any);
+    jest.spyOn(logger, "info").mockImplementation();
 
     // Setup
     const userId = "user123";
@@ -90,6 +93,7 @@ describe("MessageBuffer", () => {
     // Arrange
     jest.spyOn(conversationRepository, "getHistory").mockResolvedValue([]);
     jest.spyOn(autoReplyService, "isEnabled").mockReturnValue(false);
+    jest.spyOn(logger, "info").mockImplementation();
     // Act
     messageBuffer.addMessage("user123", "Hello", "1234567890");
     // Assert
@@ -102,6 +106,7 @@ describe("MessageBuffer", () => {
     jest.spyOn(conversationRepository, "getHistory").mockResolvedValue([]);
     jest.spyOn(autoReplyService, "isEnabled").mockReturnValue(true);
     jest.spyOn(messageProcessingQueue, "add").mockResolvedValue({} as any);
+    jest.spyOn(logger, "info").mockImplementation();
 
     // Add first message
     messageBuffer.addMessage("user123", "Hello", "1234567890");

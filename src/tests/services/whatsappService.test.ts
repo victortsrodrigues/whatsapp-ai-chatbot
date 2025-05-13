@@ -14,6 +14,8 @@ describe("WhatsAppService", () => {
   it("should process messages from a valid WhatsApp webhook payload", async () => {
     // Arrange
     jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     jest.spyOn(messageBuffer, "addMessage").mockImplementation();
 
     const payload: WhatsAppWebhookPayload = {
@@ -71,6 +73,8 @@ describe("WhatsAppService", () => {
     // Arrange
     jest.spyOn(logger, "warn").mockImplementation();
     jest.spyOn(messageBuffer, "addMessage").mockImplementation();
+    jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
 
     const payload: WhatsAppWebhookPayload = {
       object: "instagram",
@@ -90,6 +94,8 @@ describe("WhatsAppService", () => {
   it("should process image messages with captions", async () => {
     // Arrange
     jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     jest.spyOn(messageBuffer, "addMessage").mockImplementation();
 
     const payload: WhatsAppWebhookPayload = {
@@ -145,6 +151,8 @@ describe("WhatsAppService", () => {
   it("should enable auto-reply for specific trigger message", async () => {
     // Arrange
     jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     jest.spyOn(messageBuffer, "addMessage").mockImplementation();
     jest.spyOn(autoReplyService, "enable").mockImplementation();
 
@@ -203,6 +211,9 @@ describe("WhatsAppService", () => {
       .mockResolvedValueOnce({ status: 200, data: {} });
     const loggerInfoSpy = jest.spyOn(logger, "info");
     const loggerDebugSpy = jest.spyOn(logger, "debug");
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
+    jest.spyOn(logger, "info").mockImplementation();
 
     // Act
     await whatsappService.sendMessage(to, text);
@@ -232,6 +243,9 @@ describe("WhatsAppService", () => {
 
   it("should truncate message if it exceeds max length", async () => {
     // Arrange
+    jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     const longMessage = "a".repeat(5000); // 5000 characters
     const to = "1234567890";
     const truncatedMessage = longMessage.substring(0, 4096 - 3) + "...";
@@ -261,6 +275,9 @@ describe("WhatsAppService", () => {
 
   it("should handle rate limiting by enqueuing message for retry", async () => {
     // Arrange
+    jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     jest.mock("axios");
     const to = "1234567890";
     const text = "Test message";
@@ -300,6 +317,8 @@ describe("WhatsAppService", () => {
 
     (axios.post as jest.Mock).mockRejectedValueOnce(errorResponse);
     jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
 
     // Act
     await expect(whatsappService.sendMessage(to, text)).rejects.toThrow(
@@ -309,6 +328,9 @@ describe("WhatsAppService", () => {
 
   it("should verify webhook with valid token", async () => {
     process.env.WHATSAPP_VERIFY_TOKEN = "valid_token";
+    jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     const result = whatsappService.verifyWebhook(
       "subscribe",
       "valid_token",
@@ -319,6 +341,9 @@ describe("WhatsAppService", () => {
 
   it("should reject webhook with invalid token", () => {
     process.env.WHATSAPP_VERIFY_TOKEN = "valid_token";
+    jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     const result = whatsappService.verifyWebhook(
       "subscribe",
       "invalid_token",
@@ -329,6 +354,9 @@ describe("WhatsAppService", () => {
 
   it("should resend the last message when delivery fails", async () => {
     // Arrange
+    jest.spyOn(logger, "info").mockImplementation();
+    jest.spyOn(logger, "error").mockImplementation();
+    jest.spyOn(logger, "warn").mockImplementation();
     jest.spyOn(conversationRepository, "getHistory").mockResolvedValueOnce([
       { role: "user", content: "Hello" },
       { role: "assistant", content: "Hi there!" },
