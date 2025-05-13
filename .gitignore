@@ -35,3 +35,4 @@ dump.rdb
 
 .qodo
 coverage/
+integration/
