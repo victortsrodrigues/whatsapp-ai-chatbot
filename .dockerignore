@@ -6,3 +6,4 @@ build/
 .env.example
 coverage-integration/
 integration/
+jest.integration.config.ts
