@@ -6,7 +6,7 @@
 
 **A Node.js/Express backend powered by Redis & BullMQ to process WhatsApp webhooks, generate AI‑driven replies and respond asynchronously.**
 
-🔗 **Live URL**: _(add your Render service URL here)_
+🔗 **Live URL**: [https://whatsapp-ai-chatbot-qd42.onrender.com](https://whatsapp-ai-chatbot-qd42.onrender.com)
 
 ---
 
@@ -56,63 +56,6 @@ whatsapp-chatbot/
 - **Redis** (local or via Testcontainers / redis-memory-server for tests)  
 - **GitHub Secrets** (for CI/CD):  
   - `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`  
-  - `RENDER_SERVICE_ID`, `RENDER_API_KEY`
+  - `RENDER_DEPLOY_HOOK_URL`
 
 ---
-
-## Installation
-
-1. Clone the repository
-```bash
-git clone <repository-url>
-cd whatsapp-ai-chatbot
-```
-
-2. Install dependencies
-```bash
-npm install
-```
-
-3. Set up environment variables
-```bash
-cp .env.example .env
-```
-
-4. Edit the `.env` file with your WhatsApp API credentials and other settings
-
-## Development
-
-Run the development server:
-```bash
-npm run dev
-```
-
-## Building for Production
-
-Build the TypeScript code:
-```bash
-npm run build
-```
-
-Run the production server:
-```bash
-npm start
-```
-
-## API Endpoints
-
-- `GET /health`: Health check endpoint
-- `GET /webhook`: WhatsApp webhook verification endpoint
-- `POST /webhook`: WhatsApp webhook endpoint for incoming messages
-
-## WhatsApp API Setup
-
-1. Create a WhatsApp Business account in the Meta Developer Portal
-2. Set up a WhatsApp Business API integration
-3. Configure the webhook URL to point to your server's `/webhook` endpoint
-4. Set up a verify token (same as in your .env file)
-5. Subscribe to the appropriate webhook events (messages, message_deliveries, etc.)
-
-## License
-
-[MIT](LICENSE)
