@@ -38,7 +38,6 @@ class MessageBuffer {
         try {
           const history = await conversationRepository.getHistory(userId);
 
-          // Adiciona o job à fila de processamento
           await messageProcessingQueue.add('process', {
             userId,
             combinedMessage: buffer.messages.join(' '),

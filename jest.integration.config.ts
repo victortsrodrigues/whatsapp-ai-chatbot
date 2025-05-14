@@ -27,15 +27,15 @@ const config: Config.InitialOptions = {
   ],
   verbose: true,
   clearMocks: true,
-  testTimeout: 30000, // Tempo maior para testes de integração
+  testTimeout: 30000,
   forceExit: true,
   detectOpenHandles: true,
   setupFilesAfterEnv: ["./src/tests/jest.integration.setup.ts"],
   resetMocks: false,
   resetModules: false,
   restoreMocks: true,
-  bail: false, // Não pare após o primeiro teste falhar
-  maxWorkers: 1, // Executar testes em série para evitar conflitos
+  bail: false,
+  maxWorkers: 1,
   testPathIgnorePatterns: ["/node_modules/", "/dist/"],
 };
 

@@ -2,7 +2,6 @@ import request from "supertest";
 import { app } from "../../app";
 import whatsappService from "../../services/whatsappService";
 import autoReplyService from "../../services/autoReplyService";
-import { WhatsAppWebhookPayload } from "../../interfaces";
 import {
   messageProcessingQueue,
   messageReplyQueue,
@@ -12,7 +11,6 @@ import { createWebhookPayload } from "./factoryIntegration";
 import { testEventsWorkers } from "../../workers";
 import { testEventsMessageBuffer } from "../../utils/messageBuffer";
 
-// Mock do serviço AI para não fazer chamadas externas
 jest.mock("../../services/aiService", () => ({
   __esModule: true,
   default: {
@@ -27,15 +25,12 @@ jest.mock("../../services/aiService", () => ({
 describe("WhatsApp Integration Flow", () => {
   beforeEach(async () => {
     try {
-      // Limpar filas antes de cada teste
       await webhookProcessingQueue.obliterate({ force: true });
       await messageProcessingQueue.obliterate({ force: true });
       await messageReplyQueue.obliterate({ force: true });
 
-      // Resetar mocks
       jest.clearAllMocks();
 
-      // Garantir que o autoReply está habilitado para o usuário de teste
       await autoReplyService.enable(["123456789"]);
     } catch (error) {
       console.error("Error in test setup:", error);
@@ -43,7 +38,6 @@ describe("WhatsApp Integration Flow", () => {
   }, 10000);
 
   afterEach(async () => {
-    // Limpar qualquer estado específico do teste
     jest.clearAllMocks();
   });
 
@@ -54,13 +48,13 @@ describe("WhatsApp Integration Flow", () => {
     const userMessage = "Olá, preciso de ajuda!";
     const webhookPayload = createWebhookPayload(userId, userMessage);
 
-    // Enviar requisição para o endpoint webhook
+    // Act
     const response = await request(app)
       .post("/webhook")
       .send(webhookPayload)
       .set("Content-Type", "application/json");
 
-    // Verificar se a resposta foi OK
+    // Assert
     expect(response.status).toBe(200);
     expect(response.text).toBe("OK");
 
@@ -92,7 +86,6 @@ describe("WhatsApp Integration Flow", () => {
     const userMessage = "Esta mensagem não deve ser processada";
     const webhookPayload = createWebhookPayload(userId, userMessage);
 
-    // Garantir que o usuário está desabilitado
     await autoReplyService.disable([userId]);
 
     // Act
@@ -101,7 +94,7 @@ describe("WhatsApp Integration Flow", () => {
       .send(webhookPayload)
       .set("Content-Type", "application/json");
 
-    // Verificar resposta imediata
+    // Assert
     expect(response.status).toBe(200);
     expect(response.text).toBe("OK");
 
