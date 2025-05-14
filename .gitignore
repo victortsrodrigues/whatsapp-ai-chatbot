@@ -34,7 +34,6 @@ dump.rdb
 
 .qodo
 coverage/
-integration/
 coverage-integration/
-jest.integration.config.ts
+
 

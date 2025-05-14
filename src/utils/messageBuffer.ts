@@ -4,6 +4,9 @@ import logger from "./logger";
 import conversationRepository from "../repositories/conversationRepository";
 import autoReplyService from "../services/autoReplyService";
 import { messageProcessingQueue } from '../utils/queues';
+import EventEmitter from 'events';
+
+export const testEventsMessageBuffer = new EventEmitter();
 
 class MessageBuffer {
   private readonly buffers: Map<string, BufferedMessage> = new Map();
@@ -25,10 +28,10 @@ class MessageBuffer {
       buffer.messages.push(message);
       buffer.lastTimestamp = timestamp;
 
-      // Alteração principal: Usando BullMQ em vez de processamento local
       const timeoutId = setTimeout(async () => {
         if (!autoReplyService.isEnabled(userId)) {
           this.buffers.delete(userId);
+          testEventsMessageBuffer.emit('messageNotSent', { userId });
           return;
         }
 
