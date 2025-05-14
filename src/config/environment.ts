@@ -15,6 +15,7 @@ const environment = {
   },
   ai: {
     serviceUrl: process.env.AI_SERVICE_URL ?? 'https://chatbot-republic-ai-microservice.onrender.com/rag/query',
+    healthEndpoint: process.env.AI_HEALTH_ENDPOINT ?? '/health/ready',
     systemMessage:
     `Você é um atendente prestativo da República dos Estudantes. 
     Seu objetivo é construir uma conversa agradável com o cliente e enviar todas as informações necessárias.
@@ -33,6 +34,12 @@ const environment = {
     password: process.env.REDIS_PASSWORD,
     host: process.env.REDIS_HOST ?? 'redis-16971.c8.us-east-1-3.ec2.redns.redis-cloud.com',
     port: parseInt(process.env.REDIS_PORT ?? '16971', 10),
+  },
+  keepAlive: {
+    enabled: process.env.KEEP_ALIVE_ENABLED === 'true',
+    interval: parseInt(process.env.KEEP_ALIVE_INTERVAL ?? '840000', 10), // 14 minutes (Render spin down after 15 minutes)
+    url: process.env.KEEP_ALIVE_URL ?? '',
+    aiServiceKeepAlive: process.env.AI_SERVICE_KEEP_ALIVE === 'true',
   }
 };
 

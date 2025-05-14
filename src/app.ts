@@ -13,6 +13,7 @@ import whatsappController from "./controllers/whatsappController";
 import logger from "./utils/logger";
 import servicesInitialization from "./utils/servicesInitialization";
 import { messageProcessingWorker, messageReplyWorker, webhookProcessingWorker } from './utils/queues';
+import keepAliveService from "./utils/keepAlive";
 
 // Create Express application
 const app: Express = express();
@@ -65,11 +66,14 @@ const startServer = async (): Promise<void> => {
     logger.info(
       `Server started on port ${port} in ${environment.nodeEnv} mode`
     );
+    
+    keepAliveService.start();
   });
 
   // Handle graceful shutdown
   process.on("SIGTERM", () => {
     logger.info("SIGTERM signal received: closing HTTP server");
+    keepAliveService.stop();
     server.close(() => {
       logger.info("HTTP server closed");
       process.exit(0);
@@ -78,6 +82,7 @@ const startServer = async (): Promise<void> => {
 
   process.on("SIGINT", () => {
     logger.info("SIGINT signal received: closing HTTP server");
+    keepAliveService.stop();
     server.close(() => {
       logger.info("HTTP server closed");
       process.exit(0);
@@ -88,6 +93,7 @@ const startServer = async (): Promise<void> => {
     logger.error("Uncaught exception:", error);
 
     // Attempt graceful shutdown after uncaught exception
+    keepAliveService.stop();
     server.close(() => {
       logger.info("HTTP server closed after uncaught exception");
       process.exit(1);
