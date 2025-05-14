@@ -62,6 +62,10 @@ jobs:
       NODE_ENV: test
       WHATSAPP_API_TOKEN: dummy-token-for-testing
       WHATSAPP_API_URL: https://example.com/api
+      REDIS_PASSWORD: ''
+      MESSAGE_BUFFER_TIMEOUT: 1000
+      REDIS_HOST: 'localhost'
+      REDIS_PORT: 6379
 
     steps:
       - name: Checkout code
