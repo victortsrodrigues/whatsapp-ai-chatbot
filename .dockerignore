@@ -4,6 +4,8 @@ dist/
 build/
 *.env
 .env.example
+.gitignore
+.git
 coverage-integration/
 integration/
 jest.integration.config.ts

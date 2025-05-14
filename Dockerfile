@@ -1,47 +1,49 @@
-# Estágio de build
+# Build stage
 FROM node:20-alpine AS builder
 
-# Diretório de trabalho
+# Working directory
 WORKDIR /app
 
-# Copiar arquivos de dependências
+# Copy dependencies files
 COPY package*.json ./
 
-# Instalar dependências
-RUN npm ci
+# Install dependencies
+RUN npm ci --no-audit --no-fund --prefer-offline
 
-# Copiar código fonte
+# Copy source files
 COPY . .
 
-# Compilar TypeScript para JavaScript
-RUN npm run build
+# Compile typescript files to JavaScript
+RUN NODE_OPTIONS="--max-old-space-size=256" npm run build
 
-# Estágio de produção
+# Production stage
 FROM node:20-alpine AS production
 
-# Definir variáveis de ambiente para produção
+# Define environment variables for production
 ENV NODE_ENV=production
+# Limit memory usage for Node.js
+ENV NODE_OPTIONS="--max-old-space-size=384"
 
-# Criar diretório para logs
+# Create a logs directory
 RUN mkdir -p /app/logs
 
-# Diretório de trabalho
+# Working directory
 WORKDIR /app
 
-# Copiar arquivos de dependências
+# Copy dependencies files
 COPY package*.json ./
 
-# Instalar apenas dependências de produção
-RUN npm ci --only=production
+# Install dependencies for production
+RUN npm ci --omit=dev --no-audit --no-fund --prefer-offline
 
-# Copiar arquivos compilados do estágio de build
+# Copy compiled files from the builder stage
 COPY --from=builder /app/dist ./dist
 
-# Expor a porta definida no .env (padrão 5000)
+# Expose the application port
 EXPOSE 5000
 
-# Definir usuário não-root para segurança
+# Define a non-root user to run the application
 USER node
 
-# Comando para iniciar a aplicação
+# Initialize the application
 CMD ["node", "dist/app.js"]
