@@ -12,18 +12,33 @@
 
 ## 🚀 Features
 
-- 🔄 **Webhook Receiver**: Exposes an HTTP endpoint to accept WhatsApp webhook payloads.  
-- 📨 **Asynchronous Processing**: Enqueues jobs in Redis via BullMQ for reliable, scalable task execution.  
-- 🤖 **AI‑Powered Replies**: Integrates with your AI service to generate context‑aware responses.  
-- 💬 **Auto‑Reply Toggle**: Per‑user enable/disable switch for auto‑reply behavior.  
-- 📚 **Conversation History**: Persists chat history in Redis for context on each message.  
-- 📈 **Healthcheck Endpoint**: `/health` returns 200 OK for uptime monitoring.  
-- 🐳 **Dockerized**: Ready for container deployment.  
-- 🔧 **CI/CD**: GitHub Actions for lint, unit tests, Docker build/push, and Render deploy hook.
+- 🔄 **Webhook Receiver**: Exposes an HTTP endpoint to accept WhatsApp webhook payloads.
+- 📨 **Asynchronous Processing**: Redis/BullMQ job queues for scalable task execution.
+- 🤖 **AI‑Powered Replies**: Integration with RAG-based AI service for contextual replies.
+- 💬 **Auto‑Reply Toggle**: Per‑user enable/disable switch for auto‑reply behavior.
+- 💾 **Conversation History**: Conversation History: Redis-stored chat context for personalized interactions.
+- 📈 **Healthcheck Endpoint**: `/health` returns 200 OK for uptime monitoring.
+- 🐳 **Dockerized**: Production-ready containerization with multi-stage build.
+- 🛠️ **Circuit Breakers**: Resilient API calls with retries and fallbacks
+- 🔧 **CI/CD**: GitHub Actions for unit and integration tests, Docker build/push, and Render deploy hook.
+
+---
+
+## 🛠️ Technologies
+
+- **Node.js v20** + **Express**
+- **Redis** for caching/job queues
+- **BullMQ** for background task management
+- **TypeScript** for type-safe development
+- **Jest** + **Supertest** for testing
+- **Docker** for containerization
+- **GitHub Actions** for CI/CD
+- **Render** for cloud deployment
 
 ---
 
 ## 🏗️ Project Structure
+
 ```
 whatsapp-chatbot/
 ├── src/
@@ -32,8 +47,9 @@ whatsapp-chatbot/
 │ ├── services/
 │ ├── repositories/
 │ ├── utils/
-│ │ ├── redisClient.ts
-│ │ └── queues.ts
+│ ├── tests/
+│ │ ├── unit/
+│ │ └── integration/
 │ └── workers.ts
 ├── dist/ # compiled output (if using TypeScript)
 ├── test/
@@ -41,9 +57,12 @@ whatsapp-chatbot/
 │ └── integration/
 ├── .env.example
 ├── Dockerfile
+├── .dockerignore
 ├── ci-cd.yml
 ├── jest.config.js
+├── jest.integration.config.js
 ├── package.json
+├── tsconfig.json
 └── README.md
 ```
 
@@ -51,26 +70,27 @@ whatsapp-chatbot/
 
 ## ⚙️ Prerequisites
 
-- **Node.js** v20+  
-- **npm** v8+  
-- **Docker** (for local container or CI)  
-- **Redis** (local or via Testcontainers / redis-memory-server for tests)  
-- **GitHub Secrets** (for CI/CD):  
-  - `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`  
-  - `RENDER_DEPLOY_HOOK_URL`
+- Node.js v20+
+- npm v9+
+- Docker Engine 24+
+- Redis 7+ (local or cloud)
+- Meta Developer Account (for WhatsApp integration)
+- AI Service Endpoint (RAG microservice)
 
 ---
 
-## 💻 Running Locally
+## 💻 Local Development
 
-1. **Clone the repo**  
+1. **Clone the repo**
+
 ```bash
-git clone https://github.com/your-username/whatsapp-chatbot.git
-cd whatsapp-chatbot
+git clone https://github.com/victortsrodrigues/whatsapp-ai-chatbot.git
+cd whatsapp-ai-chatbot
 ```
 
-2. **Clone the repo**
-```bash	
+2. **Configure environment**
+
+```bash
 cp .env.example .env
 # then fill:
 # REDIS_HOST=localhost
@@ -81,19 +101,23 @@ cp .env.example .env
 ```
 
 3. **Install dependencies**
-```bash	
+
+```bash
 npm ci
 ```
 
 4. **Start a local Redis (if not already running)**
-```bash	
+
+```bash
 docker run -d --rm -p 6379:6379 redis:alpine
 ```
 
 5. **Run in development**
+
 ```bash
 npm run dev
 ```
+
 The server will listen on http://localhost:5000
 
 ---
@@ -101,11 +125,13 @@ The server will listen on http://localhost:5000
 ## 🧪 Automated Testing
 
 ### Run unit tests:
+
 ```bash
 npm run test:unit
 ```
 
 ### Run integration tests:
+
 ```bash
 npm run test:integration
 ```
@@ -115,15 +141,107 @@ npm run test:integration
 ## 🐳 Docker
 
 ### Build:
+
 ```bash
-docker build -t your-username/whatsapp-chatbot:latest .
+docker build -t your-username/whatsapp-ai-chatbot:latest .
 ```
 
 ### Run:
+
 ```bash
 docker run --rm -p 5000:5000 \
   --env-file .env \
-  your-username/whatsapp-chatbot:latest
+  your-username/whatsapp-ai-chatbot:latest
+```
+
+---
+
+## 📡 API Endpoints
+
+### Heallth Check
+
+```http
+GET /health
+```
+
+Response:
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2025-05-15T12:34:56Z",
+  "services": {
+    "api": "healthy",
+    "ai": "healthy",
+    "redis": "healthy"
+  }
+}
+```
+
+### Webhook Verification
+
+```http
+GET /webhook?hub.verify_token={token}&hub.challenge={challenge}
+```
+
+### Message Webhook
+
+```http
+POST /webhook
+{
+  "object": "whatsapp_business_account",
+  "entry": [{
+    "changes": [{
+      "value": {
+        "messages": [{
+          "from": "5511987654321",
+          "text": {"body": "Hello, chatbot!"}
+        }]
+      }
+    }]
+  }]
+}
+```
+
+---
+
+## 🛠️ Usage example
+
+### Input:
+
+Message sent by the user via WhatsApp:
+
+```json
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "changes": [
+        {
+          "value": {
+            "messages": [
+              {
+                "from": "5511987654321",
+                "text": { "body": "Hello, chatbot!" }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Output:
+
+Answer generated by the chatbot:
+
+```json
+{
+  "to": "5511987654321",
+  "text": { "body": "Olá! Como posso te ajudar hoje?" }
+}
 ```
 
 ---
@@ -131,21 +249,15 @@ docker run --rm -p 5000:5000 \
 ## 🔁 CI/CD
 
 The GitHub Actions pipeline (`.github/workflows/ci-cd.yml`) automates:
+
 1. Unit & Integration Tests
 2. Docker Build & Push to Docker Hub
 3. Deploy via Render Deploy Hook
 
 Make sure to set these GitHub Secrets:
-- DOCKERHUB_USERNAME, DOCKERHUB_TOKEN
-- RENDER_DEPLOY_HOOK_URL
 
----
-
-## 📡 API Endpoints
-
-- `GET /health`: Health check endpoint
-- `GET /webhook`: WhatsApp webhook verification endpoint
-- `POST /webhook`: WhatsApp webhook endpoint for incoming messages
+- `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`
+- `RENDER_DEPLOY_HOOK_URL`
 
 ---
 
@@ -160,17 +272,20 @@ Make sure to set these GitHub Secrets:
 ---
 
 ## 📬 Contributing
+
 Pull requests are welcome!  
 For major changes, please open an issue first to discuss what you'd like to change.
 
 To contribute:
-1. Fork the repository  
-2. Create a feature branch  
-3. Commit your changes with clear messages  
-4. Ensure tests are included if applicable  
-5. Open a pull request 
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes with clear messages
+4. Ensure tests are included if applicable
+5. Open a pull request
 
 ---
 
 ## 🛡️ License
+
 MIT © [Victor Rodrigues](https://github.com/victortsrodrigues)

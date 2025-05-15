@@ -403,8 +403,10 @@ describe("WhatsApp Integration Flow", () => {
 
     // Assert
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining("Unknown error when calling WhatsApp API"),
-      expect.anything()
+      expect.stringContaining("Failed to send error message to 123456789"),
+      expect.objectContaining({
+        response: { status: 500, data: { message: "Internal Server Error" } },
+      })
     );
   }, 30000);
 });
