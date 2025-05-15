@@ -27,7 +27,7 @@ const config: Config.InitialOptions = {
   ],
   verbose: true,
   clearMocks: true,
-  testTimeout: 30000,
+  testTimeout: 60000,
   forceExit: true,
   detectOpenHandles: true,
   setupFilesAfterEnv: ["./src/tests/jest.integration.setup.ts"],

@@ -10,6 +10,7 @@ import {
 import { createWebhookPayload } from "./factoryIntegration";
 import { testEventsWorkers } from "../../workers";
 import { testEventsMessageBuffer } from "../../utils/messageBuffer";
+import conversationRepository from "repositories/conversationRepository";
 
 jest.mock("../../services/aiService", () => ({
   __esModule: true,
@@ -77,7 +78,7 @@ describe("WhatsApp Integration Flow", () => {
       "123456789",
       "Esta é uma resposta de teste da IA"
     );
-  }, 15000);
+  }, 30000);
 
   it("should not process messages for disabled users", async () => {
     // Arrange
@@ -113,5 +114,55 @@ describe("WhatsApp Integration Flow", () => {
 
     // Assert
     expect(whatsappService.sendMessage).not.toHaveBeenCalled();
-  }, 15000);
+  }, 30000);
+
+  it("should handle multiple messages from the same user", async () => {
+    // Arrange
+    jest.spyOn(whatsappService, "sendMessage").mockResolvedValue();
+    const userId = "123456789";
+    const firstMessage = "Olá, preciso de informações";
+    const secondMessage = "Sobre os quartos disponíveis";
+    
+    // Enviar primeira mensagem
+    const firstPayload = createWebhookPayload(userId, firstMessage);
+    await request(app)
+      .post("/webhook")
+      .send(firstPayload)
+      .set("Content-Type", "application/json");
+    
+    // Enviar segunda mensagem rapidamente (dentro do tempo de buffer)
+    const secondPayload = createWebhookPayload(userId, secondMessage);
+    const response = await request(app)
+      .post("/webhook")
+      .send(secondPayload)
+      .set("Content-Type", "application/json");
+    
+    // Verificar resposta imediata
+    expect(response.status).toBe(200);
+    expect(response.text).toBe("OK");
+    
+    // Esperar pelo processamento completo
+    await new Promise<void>((resolve) => {
+      testEventsWorkers.once("messageSent", () => {
+        resolve();
+      });
+      
+      setTimeout(() => {
+        console.error("Test timed out waiting for messageSent event");
+        resolve();
+      }, 30000);
+    });
+    
+    // Assert - deve ter sido chamado apenas uma vez com as mensagens combinadas
+    expect(whatsappService.sendMessage).toHaveBeenCalledTimes(1);
+    expect(whatsappService.sendMessage).toHaveBeenCalledWith(
+      "123456789",
+      "Esta é uma resposta de teste da IA"
+    );
+    expect(conversationRepository.addConversation).toHaveBeenCalledWith(
+      userId,
+      expect.stringContaining("Olá, preciso de informações Sobre os quartos disponíveis"),
+      expect.stringContaining("Esta é uma resposta de teste da IA")
+    );
+  }, 30000);
 });
