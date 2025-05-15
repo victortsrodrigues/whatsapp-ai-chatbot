@@ -7,7 +7,7 @@ import {
   messageReplyQueue,
   webhookProcessingQueue,
 } from "../../utils/queues";
-import { createWebhookPayload } from "./factoryIntegration";
+import { createWebhookPayload, createImageWebhookPayload } from "./factoryIntegration";
 import { testEventsWorkers } from "../../workers";
 import { testEventsMessageBuffer } from "../../utils/messageBuffer";
 import conversationRepository from "../../repositories/conversationRepository";
@@ -170,7 +170,7 @@ describe("WhatsApp Integration Flow", () => {
   it("should handle webhook verification correctly", async () => {
     // Arrange
     const mode = "subscribe";
-    const token = "chatbot_republica_verify_token";
+    const token = "dummy-token-for-testing";
     const challenge = "challenge_code_123";
     
     // Act
@@ -236,7 +236,6 @@ describe("WhatsApp Integration Flow", () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("status", "ok");
     
-    // Verificar se o usuário foi realmente habilitado
     const isEnabled = autoReplyService.isEnabled(userId);
     expect(isEnabled).toBe(true);
   }, 30000);
@@ -263,5 +262,42 @@ describe("WhatsApp Integration Flow", () => {
     expect(isEnabled).toBe(false);
   }, 30000);
 
-  
+  it("should handle special command to enable auto-reply", async () => {
+    // Arrange
+    jest.spyOn(whatsappService, "sendMessage").mockResolvedValue();
+    const userId = "987654321";
+    const specialCommand = "vi esse anúncio e gostaria de mais informações";
+    const webhookPayload = createImageWebhookPayload(userId, specialCommand);
+
+    // Garantir que o usuário está desabilitado inicialmente
+    await autoReplyService.disable([userId]);
+
+    // Act
+    const response = await request(app)
+      .post("/webhook")
+      .send(webhookPayload)
+      .set("Content-Type", "application/json");
+
+    // Verificar resposta imediata
+    expect(response.status).toBe(200);
+    expect(response.text).toBe("OK");
+
+    // Wait for the webhook job to be processed
+    await new Promise<void>((resolve) => {
+      testEventsWorkers.once("messageSent", () => {
+        resolve();
+      });
+
+      // Fallback
+      setTimeout(() => {
+        console.error("Test timed out waiting for messageSent event");
+        resolve();
+      }, 30000);
+    });
+
+    // Assert
+    const isEnabled = autoReplyService.isEnabled(userId);
+    expect(isEnabled).toBe(true);
+    expect(whatsappService.sendMessage).toHaveBeenCalledTimes(1);
+  }, 30000);
 });
