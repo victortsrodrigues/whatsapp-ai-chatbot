@@ -10,7 +10,7 @@ import {
 import { createWebhookPayload } from "./factoryIntegration";
 import { testEventsWorkers } from "../../workers";
 import { testEventsMessageBuffer } from "../../utils/messageBuffer";
-import conversationRepository from "repositories/conversationRepository";
+import conversationRepository from "../../repositories/conversationRepository";
 
 jest.mock("../../services/aiService", () => ({
   __esModule: true,
@@ -119,6 +119,7 @@ describe("WhatsApp Integration Flow", () => {
   it("should handle multiple messages from the same user", async () => {
     // Arrange
     jest.spyOn(whatsappService, "sendMessage").mockResolvedValue();
+    jest.spyOn(conversationRepository, 'addConversation');
     const userId = "123456789";
     const firstMessage = "Olá, preciso de informações";
     const secondMessage = "Sobre os quartos disponíveis";
