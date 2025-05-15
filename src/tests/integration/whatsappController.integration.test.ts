@@ -7,7 +7,10 @@ import {
   messageReplyQueue,
   webhookProcessingQueue,
 } from "../../utils/queues";
-import { createWebhookPayload, createImageWebhookPayload } from "./factoryIntegration";
+import {
+  createWebhookPayload,
+  createImageWebhookPayload,
+} from "./factoryIntegration";
 import { testEventsWorkers } from "../../workers";
 import { testEventsMessageBuffer } from "../../utils/messageBuffer";
 import conversationRepository from "../../repositories/conversationRepository";
@@ -119,25 +122,25 @@ describe("WhatsApp Integration Flow", () => {
   it("should handle multiple messages from the same user", async () => {
     // Arrange
     jest.spyOn(whatsappService, "sendMessage").mockResolvedValue();
-    jest.spyOn(conversationRepository, 'addConversation');
+    jest.spyOn(conversationRepository, "addConversation");
     const userId = "123456789";
     const firstMessage = "Olá, preciso de informações";
     const secondMessage = "Sobre os quartos disponíveis";
-    
+
     // Send first message
     const firstPayload = createWebhookPayload(userId, firstMessage);
     await request(app)
       .post("/webhook")
       .send(firstPayload)
       .set("Content-Type", "application/json");
-    
+
     // send second message
     const secondPayload = createWebhookPayload(userId, secondMessage);
     const response = await request(app)
       .post("/webhook")
       .send(secondPayload)
       .set("Content-Type", "application/json");
-    
+
     // Assert
     expect(response.status).toBe(200);
     expect(response.text).toBe("OK");
@@ -147,13 +150,13 @@ describe("WhatsApp Integration Flow", () => {
       testEventsWorkers.once("messageSent", () => {
         resolve();
       });
-      
+
       setTimeout(() => {
         console.error("Test timed out waiting for messageSent event");
         resolve();
       }, 30000);
     });
-    
+
     // Assert
     expect(whatsappService.sendMessage).toHaveBeenCalledTimes(1);
     expect(whatsappService.sendMessage).toHaveBeenCalledWith(
@@ -162,7 +165,9 @@ describe("WhatsApp Integration Flow", () => {
     );
     expect(conversationRepository.addConversation).toHaveBeenCalledWith(
       userId,
-      expect.stringContaining("Olá, preciso de informações Sobre os quartos disponíveis"),
+      expect.stringContaining(
+        "Olá, preciso de informações Sobre os quartos disponíveis"
+      ),
       expect.stringContaining("Esta é uma resposta de teste da IA")
     );
   }, 30000);
@@ -172,16 +177,14 @@ describe("WhatsApp Integration Flow", () => {
     const mode = "subscribe";
     const token = "dummy-token-for-testing";
     const challenge = "challenge_code_123";
-    
+
     // Act
-    const response = await request(app)
-      .get("/webhook")
-      .query({
-        "hub.mode": mode,
-        "hub.verify_token": token,
-        "hub.challenge": challenge
-      });
-    
+    const response = await request(app).get("/webhook").query({
+      "hub.mode": mode,
+      "hub.verify_token": token,
+      "hub.challenge": challenge,
+    });
+
     // Assert
     expect(response.status).toBe(200);
     expect(response.text).toBe(challenge);
@@ -192,16 +195,14 @@ describe("WhatsApp Integration Flow", () => {
     const mode = "subscribe";
     const token = "invalid_token";
     const challenge = "challenge_code_123";
-    
+
     // Act
-    const response = await request(app)
-      .get("/webhook")
-      .query({
-        "hub.mode": mode,
-        "hub.verify_token": token,
-        "hub.challenge": challenge
-      });
-    
+    const response = await request(app).get("/webhook").query({
+      "hub.mode": mode,
+      "hub.verify_token": token,
+      "hub.challenge": challenge,
+    });
+
     // Assert
     expect(response.status).toBe(403);
     expect(response.text).toBe("Verification failed");
@@ -212,7 +213,7 @@ describe("WhatsApp Integration Flow", () => {
     const response = await request(app)
       .get("/health")
       .set("Content-Type", "application/json");
-    
+
     // Assert
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("status", "ok");
@@ -222,20 +223,18 @@ describe("WhatsApp Integration Flow", () => {
   it("should enable auto-reply for users via API", async () => {
     // Arrange
     const userId = "555123456";
-    
-    // Primeiro desabilitar para garantir o estado inicial
     await autoReplyService.disable([userId]);
-    
+
     // Act
     const response = await request(app)
       .post("/chatbot/enable")
       .send({ userIds: [userId] })
       .set("Content-Type", "application/json");
-    
+
     // Assert
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("status", "ok");
-    
+
     const isEnabled = autoReplyService.isEnabled(userId);
     expect(isEnabled).toBe(true);
   }, 30000);
@@ -243,21 +242,19 @@ describe("WhatsApp Integration Flow", () => {
   it("should disable auto-reply for users via API", async () => {
     // Arrange
     const userId = "555123456";
-    
-    // Primeiro habilitar para garantir o estado inicial
+
     await autoReplyService.enable([userId]);
-    
+
     // Act
     const response = await request(app)
       .post("/chatbot/disable")
       .send({ userIds: [userId] })
       .set("Content-Type", "application/json");
-    
+
     // Assert
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("status", "ok");
-    
-    // Verificar se o usuário foi realmente desabilitado
+
     const isEnabled = autoReplyService.isEnabled(userId);
     expect(isEnabled).toBe(false);
   }, 30000);
@@ -268,8 +265,6 @@ describe("WhatsApp Integration Flow", () => {
     const userId = "987654321";
     const specialCommand = "vi esse anúncio e gostaria de mais informações";
     const webhookPayload = createImageWebhookPayload(userId, specialCommand);
-
-    // Garantir que o usuário está desabilitado inicialmente
     await autoReplyService.disable([userId]);
 
     // Act
@@ -278,7 +273,7 @@ describe("WhatsApp Integration Flow", () => {
       .send(webhookPayload)
       .set("Content-Type", "application/json");
 
-    // Verificar resposta imediata
+    // Assert
     expect(response.status).toBe(200);
     expect(response.text).toBe("OK");
 
@@ -299,5 +294,41 @@ describe("WhatsApp Integration Flow", () => {
     const isEnabled = autoReplyService.isEnabled(userId);
     expect(isEnabled).toBe(true);
     expect(whatsappService.sendMessage).toHaveBeenCalledTimes(1);
+  }, 30000);
+
+  it("should handle errors when sending messages", async () => {
+    // Arrange
+    jest.spyOn(whatsappService, "sendMessage").mockRejectedValueOnce({
+      response: { status: 429, headers: { "retry-after": "60" } },
+    });
+    jest.spyOn(messageReplyQueue, "add")
+
+    const userId = "123456789";
+    const userMessage = "Mensagem que será re-enfileirada";
+    const webhookPayload = createWebhookPayload(userId, userMessage);
+
+    // Act
+    const response = await request(app)
+      .post("/webhook")
+      .send(webhookPayload)
+      .set("Content-Type", "application/json");
+
+    // Assert
+    expect(response.status).toBe(200);
+    expect(response.text).toBe("OK");
+
+    // Wait for the webhook job to be processed and error to be handled
+    await new Promise<void>((resolve) => {
+      setTimeout(() => {
+        resolve();
+      }, 5000);
+    });
+
+    // Assert
+    expect(messageReplyQueue.add).toHaveBeenCalledWith(
+      "sendReply",
+      { userId, response: userMessage },
+      expect.objectContaining({ delay: 60000, attempts: 3 })
+    );
   }, 30000);
 });
