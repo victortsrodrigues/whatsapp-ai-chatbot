@@ -297,7 +297,7 @@ describe("WhatsApp Integration Flow", () => {
     expect(whatsappService.sendMessage).toHaveBeenCalledTimes(1);
   }, 30000);
 
-  it("should handle errors when sending messages", async () => {
+  it("should re-enqueue the message on rate limit (429)", async () => {
     // Arrange
     jest.spyOn(whatsappService, "sendMessage").mockRejectedValueOnce({
       response: { status: 429, headers: { "retry-after": "60" } },
@@ -366,14 +366,16 @@ describe("WhatsApp Integration Flow", () => {
 
     // Assert
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining("WhatsApp API bad request"),
-      expect.anything()
+      expect.stringContaining("Failed to send error message to 123456789"),
+      expect.objectContaining({
+        response: { status: 400, data: { message: "Bad Request" } },
+      })
     );
   }, 30000);
 
   it("should log an error for generic server error (500)", async () => {
     // Arrange
-    jest.spyOn(whatsappService, "sendMessage").mockRejectedValueOnce({
+    jest.spyOn(whatsappService, "sendMessage").mockRejectedValue({
       response: { status: 500, data: { message: "Internal Server Error" } },
     });
     jest.spyOn(logger, "error");
@@ -401,7 +403,7 @@ describe("WhatsApp Integration Flow", () => {
 
     // Assert
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining("WhatsApp API error"),
+      expect.stringContaining("Unknown error when calling WhatsApp API"),
       expect.anything()
     );
   }, 30000);
