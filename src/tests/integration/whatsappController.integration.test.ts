@@ -14,6 +14,7 @@ import {
 import { testEventsWorkers } from "../../workers";
 import { testEventsMessageBuffer } from "../../utils/messageBuffer";
 import conversationRepository from "../../repositories/conversationRepository";
+import logger from "../../utils/logger";
 
 jest.mock("../../services/aiService", () => ({
   __esModule: true,
@@ -301,7 +302,7 @@ describe("WhatsApp Integration Flow", () => {
     jest.spyOn(whatsappService, "sendMessage").mockRejectedValueOnce({
       response: { status: 429, headers: { "retry-after": "60" } },
     });
-    jest.spyOn(messageReplyQueue, "add")
+    jest.spyOn(messageReplyQueue, "add");
 
     const userId = "123456789";
     const userMessage = "Mensagem que será re-enfileirada";
@@ -327,8 +328,81 @@ describe("WhatsApp Integration Flow", () => {
     // Assert
     expect(messageReplyQueue.add).toHaveBeenCalledWith(
       "sendReply",
-      { userId, response: userMessage },
-      expect.objectContaining({ delay: 60000, attempts: 3 })
+      { userId, response: "Esta é uma resposta de teste da IA" },
+      expect.objectContaining({
+        attempts: 3,
+        backoff: { delay: 1000, type: "exponential" },
+      })
+    );
+  }, 30000);
+
+  it("should log an error for bad request (400)", async () => {
+    // Arrange
+    jest.spyOn(whatsappService, "sendMessage").mockRejectedValueOnce({
+      response: { status: 400, data: { message: "Bad Request" } },
+    });
+    jest.spyOn(logger, "error");
+
+    const userId = "123456789";
+    const userMessage = "Mensagem inválida";
+    const webhookPayload = createWebhookPayload(userId, userMessage);
+
+    // Act
+    const response = await request(app)
+      .post("/webhook")
+      .send(webhookPayload)
+      .set("Content-Type", "application/json");
+
+    // Assert
+    expect(response.status).toBe(200);
+    expect(response.text).toBe("OK");
+
+    // Wait for the webhook job to be processed and error to be handled
+    await new Promise<void>((resolve) => {
+      setTimeout(() => {
+        resolve();
+      }, 5000);
+    });
+
+    // Assert
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining("WhatsApp API bad request"),
+      expect.anything()
+    );
+  }, 30000);
+
+  it("should log an error for generic server error (500)", async () => {
+    // Arrange
+    jest.spyOn(whatsappService, "sendMessage").mockRejectedValueOnce({
+      response: { status: 500, data: { message: "Internal Server Error" } },
+    });
+    jest.spyOn(logger, "error");
+
+    const userId = "123456789";
+    const userMessage = "Mensagem que falhará";
+    const webhookPayload = createWebhookPayload(userId, userMessage);
+
+    // Act
+    const response = await request(app)
+      .post("/webhook")
+      .send(webhookPayload)
+      .set("Content-Type", "application/json");
+
+    // Assert
+    expect(response.status).toBe(200);
+    expect(response.text).toBe("OK");
+
+    // Wait for the webhook job to be processed and error to be handled
+    await new Promise<void>((resolve) => {
+      setTimeout(() => {
+        resolve();
+      }, 5000);
+    });
+
+    // Assert
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining("WhatsApp API error"),
+      expect.anything()
     );
   }, 30000);
 });
