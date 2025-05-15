@@ -124,25 +124,25 @@ describe("WhatsApp Integration Flow", () => {
     const firstMessage = "Olá, preciso de informações";
     const secondMessage = "Sobre os quartos disponíveis";
     
-    // Enviar primeira mensagem
+    // Send first message
     const firstPayload = createWebhookPayload(userId, firstMessage);
     await request(app)
       .post("/webhook")
       .send(firstPayload)
       .set("Content-Type", "application/json");
     
-    // Enviar segunda mensagem rapidamente (dentro do tempo de buffer)
+    // send second message
     const secondPayload = createWebhookPayload(userId, secondMessage);
     const response = await request(app)
       .post("/webhook")
       .send(secondPayload)
       .set("Content-Type", "application/json");
     
-    // Verificar resposta imediata
+    // Assert
     expect(response.status).toBe(200);
     expect(response.text).toBe("OK");
-    
-    // Esperar pelo processamento completo
+
+    // Wait for the webhook job to be processed
     await new Promise<void>((resolve) => {
       testEventsWorkers.once("messageSent", () => {
         resolve();
@@ -154,7 +154,7 @@ describe("WhatsApp Integration Flow", () => {
       }, 30000);
     });
     
-    // Assert - deve ter sido chamado apenas uma vez com as mensagens combinadas
+    // Assert
     expect(whatsappService.sendMessage).toHaveBeenCalledTimes(1);
     expect(whatsappService.sendMessage).toHaveBeenCalledWith(
       "123456789",
@@ -166,4 +166,102 @@ describe("WhatsApp Integration Flow", () => {
       expect.stringContaining("Esta é uma resposta de teste da IA")
     );
   }, 30000);
+
+  it("should handle webhook verification correctly", async () => {
+    // Arrange
+    const mode = "subscribe";
+    const token = "chatbot_republica_verify_token";
+    const challenge = "challenge_code_123";
+    
+    // Act
+    const response = await request(app)
+      .get("/webhook")
+      .query({
+        "hub.mode": mode,
+        "hub.verify_token": token,
+        "hub.challenge": challenge
+      });
+    
+    // Assert
+    expect(response.status).toBe(200);
+    expect(response.text).toBe(challenge);
+  }, 30000);
+
+  it("should reject webhook verification with invalid token", async () => {
+    // Arrange
+    const mode = "subscribe";
+    const token = "invalid_token";
+    const challenge = "challenge_code_123";
+    
+    // Act
+    const response = await request(app)
+      .get("/webhook")
+      .query({
+        "hub.mode": mode,
+        "hub.verify_token": token,
+        "hub.challenge": challenge
+      });
+    
+    // Assert
+    expect(response.status).toBe(403);
+    expect(response.text).toBe("Verification failed");
+  }, 30000);
+
+  it("should handle health check endpoint correctly", async () => {
+    // Act
+    const response = await request(app)
+      .get("/health")
+      .set("Content-Type", "application/json");
+    
+    // Assert
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("status", "ok");
+    expect(response.body).toHaveProperty("services");
+  }, 30000);
+
+  it("should enable auto-reply for users via API", async () => {
+    // Arrange
+    const userId = "555123456";
+    
+    // Primeiro desabilitar para garantir o estado inicial
+    await autoReplyService.disable([userId]);
+    
+    // Act
+    const response = await request(app)
+      .post("/chatbot/enable")
+      .send({ userIds: [userId] })
+      .set("Content-Type", "application/json");
+    
+    // Assert
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("status", "ok");
+    
+    // Verificar se o usuário foi realmente habilitado
+    const isEnabled = autoReplyService.isEnabled(userId);
+    expect(isEnabled).toBe(true);
+  }, 30000);
+
+  it("should disable auto-reply for users via API", async () => {
+    // Arrange
+    const userId = "555123456";
+    
+    // Primeiro habilitar para garantir o estado inicial
+    await autoReplyService.enable([userId]);
+    
+    // Act
+    const response = await request(app)
+      .post("/chatbot/disable")
+      .send({ userIds: [userId] })
+      .set("Content-Type", "application/json");
+    
+    // Assert
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("status", "ok");
+    
+    // Verificar se o usuário foi realmente desabilitado
+    const isEnabled = autoReplyService.isEnabled(userId);
+    expect(isEnabled).toBe(false);
+  }, 30000);
+
+  
 });
