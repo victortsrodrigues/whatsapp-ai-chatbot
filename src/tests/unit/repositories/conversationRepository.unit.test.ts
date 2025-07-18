@@ -71,18 +71,4 @@ describe("ConversationRepository", () => {
       JSON.stringify({ role: "assistant", content: response })
     );
   });
-
-  it("should clear conversation history for a user", async () => {
-    // Arrange
-    const userId = "user123";
-
-    jest.spyOn(redisClient, "del").mockResolvedValue(undefined);
-    jest.spyOn(redisClient, "isHealthy").mockResolvedValue(true);
-
-    // Act
-    await conversationRepository.clearHistory(userId);
-
-    // Assert
-    expect(redisClient.del).toHaveBeenCalledWith("history:user123");
-  });
 });

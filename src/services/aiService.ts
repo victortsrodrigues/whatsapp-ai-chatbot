@@ -24,10 +24,10 @@ class AIService {
         return response;
       },
       {
-        timeout: 30000,
-        errorThresholdPercentage: 30, // Opens after 30% failures
-        resetTimeout: 60000,
-        rollingCountTimeout: 10000,
+        timeout: 30000, // Max timeout for AI service call
+        errorThresholdPercentage: 20, // Opens after 30% failures
+        resetTimeout: 60000, // Remains open for 1 minute after last failure
+        rollingCountTimeout: 10000, // Window size for error count
         rollingCountBuckets: 5
       }
     );
@@ -120,7 +120,6 @@ class AIService {
       return response.data;
     } catch (error) {
       if (error instanceof Error && error.message.includes('indisponível')) {
-        // Erro do fallback
         const apiError: ApiError = new Error(error.message);
         apiError.statusCode = 503;
         throw apiError;

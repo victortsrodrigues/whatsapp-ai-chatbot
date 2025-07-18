@@ -105,11 +105,6 @@ const startServer = async (): Promise<void> => {
       process.exit(1);
     }, 5000);
   });
-
-  process.on("unhandledRejection", (reason, promise) => {
-    logger.error("Unhandled Rejection at:", promise, "reason:", reason);
-    // Application can continue running despite unhandled promise rejections
-  });
 };
 
 // Start server if this file is run directly

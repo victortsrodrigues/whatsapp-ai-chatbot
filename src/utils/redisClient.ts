@@ -5,7 +5,7 @@ import environment from '../config/environment';
 class RedisClient {
   private readonly client;
   private isConnected: boolean = false;
-  private readonly EXPIRY_TIME = 60 * 60 * 24 * 14; // 14 days in seconds
+  private readonly EXPIRY_TIME = 60 * 60 * 24 * 7; // 7 days in seconds
   private reconnectAttempts: number = 0;
 
   constructor() {
@@ -68,7 +68,7 @@ class RedisClient {
       this.reconnectAttempts++;
 
       logger.info(`Trying to reconnect in ${backoff/1000} seconds (attempt ${this.reconnectAttempts})...`);
-      setTimeout(() => this.connect(), 5000);
+      setTimeout(() => this.connect(), backoff);
     }
   }
 
@@ -116,7 +116,7 @@ class RedisClient {
     } catch (error) {
       logger.error(`Error getting key ${key} from Redis:`, error);
 
-      // Implementar retry para operações de leitura
+      // Implement retry for read operations
       if (retryCount < MAX_RETRIES) {
         const backoff = Math.min(100 * Math.pow(2, retryCount), 2000);
         logger.info(`Retrying Redis get for key ${key} in ${backoff}ms (attempt ${retryCount + 1})`);

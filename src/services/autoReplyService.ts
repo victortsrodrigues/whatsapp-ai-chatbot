@@ -35,7 +35,7 @@ class AutoReplyService {
     logger.error("Critical failure while initializing AutoReplyService.");
   }
 
-  // Disable autoresponder for these users
+  // Disable autoreply for these users
   public async disable(userIds: string[]): Promise<void> {
     try {
       for (const userId of userIds) {
@@ -53,7 +53,7 @@ class AutoReplyService {
     }
   }
 
-  // Enable autoresponder for these users
+  // Enable autoreply or these users
   public async enable(userIds: string[]): Promise<void> {
     try {
       for (const userId of userIds) {
